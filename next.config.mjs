@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  devIndicators: false,
   images: { formats: ["image/avif", "image/webp"] },
 };
 

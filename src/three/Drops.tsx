@@ -321,7 +321,9 @@ function Drizzle({ entry, kind, surface, contents }: { entry: Entry; kind: Drizz
         }
         const wx = (x * Math.cos(rot) - z * Math.sin(rot)) * s.radius;
         const wz = (x * Math.sin(rot) + z * Math.cos(rot)) * s.radius;
-        pts.push(new THREE.Vector3(wx, landingHeight(contents, wx, wz, s.level) + kind.radius * 0.7, wz));
+        // ignore anything still in the air above the dish
+        const land = Math.min(landingHeight(contents, wx, wz, s.level), s.level + 0.3);
+        pts.push(new THREE.Vector3(wx, land + kind.radius * 0.7, wz));
       }
       curveRef.current = new THREE.CatmullRomCurve3(pts);
       setGeo(new THREE.TubeGeometry(curveRef.current, 280, kind.radius, 8, false));

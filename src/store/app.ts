@@ -26,7 +26,7 @@ interface AppState {
   removeLine: (key: string) => void;
   clearCart: () => void;
   applyCoupon: (code: string | null) => void;
-  saveProfile: (p: Customer) => void;
+  saveProfile: (p: Customer | null) => void;
   setAddress: (a: string) => void;
   toggleFavourite: (id: string) => void;
   redeemReward: () => void;

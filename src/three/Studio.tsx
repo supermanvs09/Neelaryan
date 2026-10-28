@@ -57,7 +57,7 @@ export function useDirector() {
 
 /* Lighting ---------------------------------------------------------------- */
 
-function StudioLights({ quality, reduced }: { quality: QualitySettings; reduced: boolean }) {
+function StudioLights({ quality, reduced, bare }: { quality: QualitySettings; reduced: boolean; bare: boolean }) {
   const sun = useRef<THREE.SpotLight>(null);
   const gobo = useMemo(() => {
     const t = leafGoboTexture().clone();
@@ -94,8 +94,8 @@ function StudioLights({ quality, reduced }: { quality: QualitySettings; reduced:
         intensity={190}
         decay={2}
         color="#ffe2b0"
-        map={gobo}
-        castShadow
+        map={bare ? null : gobo}
+        castShadow={!bare}
         shadow-mapSize={[quality.shadowMap, quality.shadowMap]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.025}
@@ -177,11 +177,13 @@ function CameraRig({
   minAspect,
   scroll,
   orbit,
+  still = false,
 }: {
   keyframes: Keyframe[];
   minAspect: number;
   scroll?: MutableRefObject<number>;
   orbit: boolean;
+  still?: boolean;
 }) {
   const { camera, size, gl, pointer } = useThree();
   const { reduced, focus } = useDirector();
@@ -285,14 +287,14 @@ function CameraRig({
     }
 
     tmp.pos.copy(tmp.tgt).add(tmp.off);
-    if (!reduced) {
+    if (!reduced && !still) {
       const now = performance.now() / 1000;
       // handheld micro-drift + pointer parallax
       tmp.pos.x += Math.sin(now * 0.6) * 0.025 + Math.sin(now * 1.7) * 0.008 + pointer.x * 0.18;
       tmp.pos.y += Math.sin(now * 0.45 + 1) * 0.02 + pointer.y * 0.1;
     }
 
-    const k = 1 - Math.exp(-dt * (t < 0.1 ? 60 : 5));
+    const k = still ? 1 : 1 - Math.exp(-dt * (t < 0.1 ? 60 : 5));
     camera.position.lerp(tmp.pos, k);
     const cam = camera as THREE.PerspectiveCamera;
     if (Math.abs(cam.fov - fov) > 0.01) {
@@ -374,6 +376,8 @@ export interface StudioProps {
   label: string;
   /** Initial physics time scale (slow-motion intros start below 1). */
   initialTimeScale?: number;
+  /** Transparent render with no set, lens effects or camera drift (sprite rendering). */
+  bare?: boolean;
   onReady?: () => void;
 }
 
@@ -389,6 +393,7 @@ export default function Studio({
   className,
   label,
   initialTimeScale = 1,
+  bare = false,
 }: StudioProps) {
   const host = useRef<HTMLDivElement>(null);
   const [tier, setTier] = useState<Tier>(initialTier);
@@ -416,13 +421,19 @@ export default function Studio({
         <Canvas
           shadows="soft"
           dpr={quality.dpr}
-          flat
+          flat={!bare}
           frameloop={visible ? "always" : "never"}
-          gl={{ antialias: false, alpha: false, powerPreference: "high-performance", stencil: false }}
+          gl={{ antialias: bare, alpha: bare, powerPreference: "high-performance", stencil: false, preserveDrawingBuffer: bare }}
           camera={{ fov: 28, near: 0.1, far: 80, position: [0, 3, 9] }}
           onCreated={({ gl, scene }) => {
-            scene.background = new THREE.Color("#eadcc0");
-            scene.fog = new THREE.Fog("#eadcc0", 14, 30);
+            if (bare) {
+              gl.setClearColor(0x000000, 0);
+              gl.toneMapping = THREE.ACESFilmicToneMapping;
+              gl.toneMappingExposure = 1.1;
+            } else {
+              scene.background = new THREE.Color("#eadcc0");
+              scene.fog = new THREE.Fog("#eadcc0", 14, 30);
+            }
             gl.localClippingEnabled = true;
             gl.domElement.addEventListener("webglcontextlost", (e) => {
               e.preventDefault();
@@ -431,18 +442,22 @@ export default function Studio({
           }}
         >
           <DirectorContext.Provider value={director}>
-            <PerformanceMonitor onDecline={() => setTier((t) => downgrade(t))} flipflops={2} />
-            <StudioLights quality={quality} reduced={reduced} />
-            <Suspense fallback={null}>
-              <MarbleCounter />
-            </Suspense>
-            <Backdrop />
+            {!bare && <PerformanceMonitor onDecline={() => setTier((t) => downgrade(t))} flipflops={2} />}
+            <StudioLights quality={quality} reduced={reduced} bare={bare} />
+            {!bare && (
+              <>
+                <Suspense fallback={null}>
+                  <MarbleCounter />
+                </Suspense>
+                <Backdrop />
+              </>
+            )}
             <Physics paused timeStep="vary" gravity={[0, -22, 0]}>
               <PhysicsClock />
               <Suspense fallback={null}>{children}</Suspense>
             </Physics>
-            <CameraRig keyframes={keyframes} minAspect={minAspect} scroll={scroll} orbit={orbit} />
-            <Post quality={quality} />
+            <CameraRig keyframes={keyframes} minAspect={minAspect} scroll={scroll} orbit={orbit && !bare} still={bare} />
+            {!bare && <Post quality={quality} />}
           </DirectorContext.Provider>
         </Canvas>
       </GLBoundary>

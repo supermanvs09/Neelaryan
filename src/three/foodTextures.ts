@@ -183,11 +183,12 @@ export function bananaFace() {
   return cached("banana-face", () => {
     const [c, ctx] = canvas(256, 256);
     const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 126);
-    g.addColorStop(0, "#f6e7b0");
-    g.addColorStop(0.3, "#fbf0c6");
-    g.addColorStop(0.85, "#f4e2a4");
-    g.addColorStop(0.95, "#e9d48a");
-    g.addColorStop(1, "#cdb05c");
+    g.addColorStop(0, "#e6d29a");
+    g.addColorStop(0.16, "#fbf2d2");
+    g.addColorStop(0.62, "#f7ebc4");
+    g.addColorStop(0.86, "#f1e0aa");
+    g.addColorStop(0.96, "#e4cb86");
+    g.addColorStop(1, "#cfb06a");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 256, 256);
     ctx.fillStyle = "rgba(120,90,50,0.55)";
@@ -207,6 +208,30 @@ export function bananaFace() {
       ctx.stroke();
     }
     return toTexture("banana-face", c, true);
+  });
+}
+
+/* Mango flesh: fibrous, sunny, never flat --------------------------------- */
+export function mangoFlesh() {
+  return cached("mango", () => {
+    const [c, ctx] = canvas(256, 256);
+    const g = ctx.createLinearGradient(0, 0, 256, 256);
+    g.addColorStop(0, "#ffbf2e");
+    g.addColorStop(0.5, "#f8a91c");
+    g.addColorStop(1, "#ffc23a");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    const r = rng(15);
+    for (let i = 0; i < 120; i++) {
+      ctx.strokeStyle = r() > 0.5 ? "rgba(255,214,120,0.12)" : "rgba(214,110,10,0.08)";
+      ctx.lineWidth = 2 + r() * 4;
+      const x = r() * 256;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.bezierCurveTo(x + 20, 80, x - 20, 170, x + 10, 256);
+      ctx.stroke();
+    }
+    return toTexture("mango", c, true);
   });
 }
 

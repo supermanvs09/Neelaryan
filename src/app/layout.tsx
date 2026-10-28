@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
+import { AppShell } from "@/components/shell/AppShell";
+import { ProductSheet } from "@/components/menu/ProductSheet";
 
 const display = Cormorant_Garamond({
   subsets: ["latin"],
@@ -33,7 +35,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-dvh bg-ivory font-sans text-ink antialiased">{children}</body>
+      <body className="min-h-dvh bg-ivory font-sans text-ink antialiased">
+        <AppShell>{children}</AppShell>
+        <ProductSheet />
+      </body>
     </html>
   );
 }

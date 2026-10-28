@@ -39,6 +39,8 @@ export interface Customer {
   name: string;
   phone: string;
   email?: string;
+  /** yyyy-mm-dd, optional — used for birthday offers */
+  dob?: string;
 }
 
 export interface Order {

@@ -151,25 +151,25 @@ function roundedCoin(radius: number, thickness: number, edge: number) {
   return g;
 }
 
-const bananaSlice = once(() => noisify(roundedCoin(0.155, 0.06, 0.018), 0.02, 8, 1));
+const bananaSlice = once(() => noisify(roundedCoin(0.15, 0.036, 0.012), 0.025, 8, 1));
 const kiwiSlice = once(() => roundedCoin(0.15, 0.04, 0.008));
 
 /** Apple wedge with red skin only on the outer arc (vertex colours). */
 const appleWedge = once(() => {
   const R = 0.2;
+  // a crescent: skin on the outer arc, the core cut away on the inner side
   const s = new THREE.Shape();
-  s.moveTo(0.05, 0);
-  s.absarc(0, 0, R, -0.32, 0.32, false);
-  s.lineTo(0.05, 0);
-  const g = new THREE.ExtrudeGeometry(s, { depth: 0.08, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.008, bevelSegments: 2, curveSegments: 14 }).toNonIndexed();
+  s.absarc(0, 0, R, -0.42, 0.42, false);
+  s.absarc(0.02, 0, R * 0.5, 0.62, -0.62, true);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.006, bevelSegments: 2, curveSegments: 18 }).toNonIndexed();
   const pos = g.attributes.position;
   const colors = new Float32Array(pos.count * 3);
   const skin = new THREE.Color("#b3192a");
-  const flesh = new THREE.Color("#f5eccc");
+  const flesh = new THREE.Color("#f3e3b4");
   for (let i = 0; i < pos.count; i += 3) {
     let rr = 0;
     for (let k = 0; k < 3; k++) rr += Math.hypot(pos.getX(i + k), pos.getY(i + k));
-    const c = rr / 3 > R * 0.95 ? skin : flesh;
+    const c = rr / 3 > R * 0.97 ? skin : flesh;
     for (let k = 0; k < 3; k++) c.toArray(colors, (i + k) * 3);
   }
   g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
@@ -178,7 +178,7 @@ const appleWedge = once(() => {
   return g;
 });
 
-const mangoCube = once(() => noisify(new RoundedBoxGeometry(0.11, 0.1, 0.11, 3, 0.025), 0.04, 12, 3));
+const mangoCube = once(() => noisify(new RoundedBoxGeometry(0.11, 0.1, 0.11, 4, 0.03), 0.08, 14, 3));
 
 const almond = once(() => {
   const pts: THREE.Vector2[] = [];
@@ -220,13 +220,22 @@ const nib = once(() => noisify(new THREE.DodecahedronGeometry(0.026, 0), 0.1, 30
 const granolaCluster = once(() => {
   const r = rng(13);
   const parts: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < 7; i++) {
-    const p = new THREE.DodecahedronGeometry(0.022 + r() * 0.018, 0).toNonIndexed();
-    p.translate((r() - 0.5) * 0.06, (r() - 0.5) * 0.035, (r() - 0.5) * 0.06);
-    parts.push(p);
+  const colors: number[][] = [];
+  const tones = ["#c58b47", "#b2793a", "#d8a965", "#9c6630", "#e2bb7c"].map((c) => new THREE.Color(c));
+  for (let i = 0; i < 9; i++) {
+    // smooth toasted lumps and a few flat oat shards stuck together
+    const shard = i % 3 === 2;
+    const p = shard ? new THREE.CircleGeometry(0.028, 7) : new THREE.IcosahedronGeometry(0.018 + r() * 0.014, 1);
+    if (shard) p.rotateX(-Math.PI / 2 + (r() - 0.5));
+    noisify(p, shard ? 0.1 : 0.22, 40, i);
+    p.translate((r() - 0.5) * 0.07, (r() - 0.5) * 0.03, (r() - 0.5) * 0.07);
+    const flat = p.toNonIndexed();
+    const tone = tones[Math.floor(r() * tones.length)];
+    colors.push(Array.from({ length: flat.attributes.position.count }, () => [tone.r, tone.g, tone.b]).flat());
+    parts.push(flat);
   }
   const g = mergeGeometries(parts)!;
-  g.computeVertexNormals();
+  g.setAttribute("color", new THREE.Float32BufferAttribute(colors.flat(), 3));
   return g;
 });
 
@@ -279,8 +288,8 @@ const MAT = {
   ),
   banana: once(() => phys({ map: bananaFace(), roughness: 0.45, clearcoat: 0.35, clearcoatRoughness: 0.4, sheen: 0.2, sheenColor: new THREE.Color("#fff5d0") })),
   kiwi: once(() => phys({ map: kiwiFace(), roughness: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.15 })),
-  apple: once(() => phys({ vertexColors: true, roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.2 })),
-  mango: once(() => phys({ color: "#f39a12", roughness: 0.28, clearcoat: 0.8, clearcoatRoughness: 0.2, sheen: 0.4, sheenColor: new THREE.Color("#ffd27a") })),
+  apple: once(() => phys({ vertexColors: true, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.25 })),
+  mango: once(() => phys({ color: "#ffa41a", roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.3, sheen: 0.6, sheenColor: new THREE.Color("#ffe08a") })),
   almond: once(() => {
     const { map, normal } = almondSkin();
     return phys({ map, normalMap: normal, roughness: 0.62 });
@@ -292,7 +301,7 @@ const MAT = {
   raisin: once(() => phys({ color: "#3d1611", roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.4 })),
   pumpkin: once(() => phys({ color: "#5b7a36", roughness: 0.5, sheen: 0.3, sheenColor: new THREE.Color("#b9d38a") })),
   nib: once(() => phys({ color: "#3b2016", roughness: 0.75 })),
-  granola: once(() => phys({ color: "#c08643", roughness: 0.82 })),
+  granola: once(() => phys({ vertexColors: true, roughness: 0.75, sheen: 0.3, sheenColor: new THREE.Color("#ffd99a"), side: THREE.DoubleSide })),
   chip: once(() => phys({ color: "#36190d", roughness: 0.32, clearcoat: 0.4 })),
   scoop: once(() => phys({ color: "#f6ecd2", roughness: 0.62, sheen: 0.6, sheenColor: new THREE.Color("#ffffff") })),
   plant: once(() => phys({ color: "#d6cda7", roughness: 1 })),

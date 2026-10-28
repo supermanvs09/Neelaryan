@@ -51,7 +51,7 @@ function bandProfile(t0: number, t1: number) {
 }
 
 /** Hand-glazed speckled stoneware with a gold rim and the NEELARYAN wordmark. */
-export function BowlShell() {
+export function BowlShell({ clip }: { clip?: THREE.Plane[] }) {
   const font = useDisplayFont();
   const geo = useMemo(() => new THREE.LatheGeometry(bowlProfile(), 128), []);
   const band = useMemo(() => new THREE.LatheGeometry(bandProfile(0.3, 0.86), 128, -Math.PI, Math.PI * 2), []);
@@ -83,6 +83,10 @@ export function BowlShell() {
       polygonOffsetFactor: -2,
     });
   }, [font]);
+
+  useEffect(() => {
+    for (const m of [ceramic, gold, bandMat]) if (m) m.clippingPlanes = clip ?? null;
+  }, [clip, ceramic, gold, bandMat]);
 
   useEffect(
     () => () => {
@@ -266,17 +270,24 @@ function OatBed({ base, surface, introAt }: { base: IngredientId | null; surface
 /* Bowl -------------------------------------------------------------------- */
 
 /** A complete bowl whose contents build themselves as `ingredients` change. */
+const FRONT_CLIP = [new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)];
+
 export function Bowl({
   ingredients,
   introAt = 0.5,
   gap = 0.55,
   position = [0, 0, 0],
+  shell = "full",
+  contents: showContents = true,
 }: {
   ingredients: IngredientId[];
   /** Director-clock time the pour begins. */
   introAt?: number;
   gap?: number;
   position?: [number, number, number];
+  /** "front" renders only the half nearest the camera (an overlay layer for sprites). */
+  shell?: "full" | "front" | "none";
+  contents?: boolean;
 }) {
   const base = ingredients.find((i) => BASES.includes(i)) ?? null;
   const food = useMemo(() => ingredients.filter((i) => !BASES.includes(i)), [ingredients]);
@@ -285,9 +296,9 @@ export function Bowl({
 
   return (
     <group position={position}>
-      <BowlShell />
+      {shell !== "none" && <BowlShell clip={shell === "front" ? FRONT_CLIP : undefined} />}
       <BowlCollider />
-      <group ref={contents}>
+      <group ref={contents} visible={showContents}>
         <OatBed base={base} surface={surface} introAt={introAt} />
         <FoodDrops ids={food} surface={surface} contents={contents} introAt={introAt + 1.5} gap={gap} />
       </group>
