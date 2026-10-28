@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-padding-top: 9rem;
+  }
+  body {
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: #e8d3a0;
+    color: #0b1a33;
+  }
+  :focus-visible {
+    outline: 2px solid #a8812f;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-feature-settings: "liga", "dlig";
+  }
+  .text-gold-gradient {
+    background: linear-gradient(100deg, #8a6a22 0%, #c9a04a 30%, #f2e0ac 50%, #c9a04a 70%, #8a6a22 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-[transform,background-color,box-shadow,color] duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-navy-800 text-ivory shadow-lift hover:bg-navy-700;
+  }
+  .btn-gold {
+    @apply btn bg-gradient-to-b from-gold-400 to-gold-500 text-navy-900 shadow-gold hover:from-gold-300 hover:to-gold-400;
+  }
+  .btn-ghost {
+    @apply btn border border-sand-400 bg-ivory/70 text-navy-800 hover:border-gold-500 hover:bg-white;
+  }
+  .chip {
+    @apply inline-flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors;
+  }
+  .card {
+    @apply rounded-3xl border border-sand-400/60 bg-white/70 shadow-card backdrop-blur-[2px];
+  }
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.22em] text-gold-700;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #efe5d1 0%, #f8f1e2 50%, #efe5d1 100%);
+    background-size: 200% 100%;
+    @apply animate-skeleton;
+  }
+  .pb-safe {
+    padding-bottom: calc(var(--safe-bottom) + 0.75rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
