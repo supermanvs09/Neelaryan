@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronsLeft, ChevronsRight, KeyRound, LogOut, Menu, X, ExternalLink } from "lucide-react";
 import { NAV_GROUPS, type NavItem } from "./nav";
 import { ThemeSwitch } from "@/components/theme";
@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api-client";
 import { clsx } from "@/lib/clsx";
 
 export interface ShellUser {
+  id: string;
   name: string;
   username: string;
   roleName: string;
@@ -33,10 +34,15 @@ async function signOut() {
 }
 
 function NavList({ groups, path, collapsed, onNavigate }: { groups: typeof NAV_GROUPS; path: string; collapsed: boolean; onNavigate?: () => void }) {
+  const ref = useRef<HTMLElement>(null);
+  // keep the current page visible in a scrolled sidebar (short screens)
+  useEffect(() => {
+    ref.current?.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  }, [path]);
   return (
-    <nav aria-label="Console" className="flex-1 overflow-y-auto px-2.5 py-3">
+    <nav ref={ref} aria-label="Console" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3">
       {groups.map((g) => (
-        <div key={g.label} className="mb-4">
+        <div key={g.label} className="mb-3">
           {!collapsed && <p className="px-2.5 pb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ivory/45 dark:text-muted">{g.label}</p>}
           <ul className="space-y-0.5">
             {g.items.map((i) => {
@@ -138,7 +144,7 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
             <aside className={clsx("fixed inset-y-0 left-0 z-40 hidden flex-col bg-[#1b2740] md:flex dark:border-r dark:border-line dark:bg-[#141e31]", collapsed ? "w-[68px]" : "w-[248px]")}>
               {brand}
               <NavList groups={groups} path={path} collapsed={collapsed} />
-              <button onClick={toggle} className="mx-2.5 mb-1 flex h-8 items-center justify-center gap-2 rounded-lg text-[12.5px] text-[#aeb6c4] hover:bg-white/[0.06] hover:text-[#fff]" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+              <button onClick={toggle} className="mx-2.5 mb-1 flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg text-[12.5px] text-[#aeb6c4] hover:bg-white/[0.06] hover:text-[#fff]" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
                 {collapsed ? <ChevronsRight size={16} /> : <>
                   <ChevronsLeft size={16} /> Collapse
                 </>}
