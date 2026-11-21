@@ -5,7 +5,7 @@ import { BadgePercent, Plus } from "lucide-react";
 import { Badge, Button, Card, Checkbox, DataTable, Dialog, Empty, ErrorBlock, Field, Input, LoadingBlock, Notice, PageHeader, Switch, useConfirm, useToast } from "./ui";
 import { useCan } from "./AdminShell";
 import { ClientApiError, apiFetch, useApi } from "@/lib/api-client";
-import { rupees } from "@/lib/format";
+import { plural, rupees } from "@/lib/format";
 import { cafeClock, daysLabel, isOfferLive, windowLabel, type Offer as LiveOffer } from "@/lib/offers";
 
 interface Offer {
@@ -62,7 +62,7 @@ export function OffersPage() {
       {loading && !data ? (
         <LoadingBlock />
       ) : (
-        <Card padded={false} title="All offers" description={offers.length ? `Last 30 days: ${totals.orders} orders used an offer, ${rupees(totals.discount)} given in discounts.` : undefined}>
+        <Card padded={false} title="All offers" description={offers.length ? `Last 30 days: ${plural(totals.orders, "order")} used an offer, ${rupees(totals.discount)} given in discounts.` : undefined}>
           <DataTable
             rows={offers}
             rowKey={(o) => o.id}

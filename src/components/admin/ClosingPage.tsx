@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Banknote, CheckCircle2 } from "lucide-react";
 import { Badge, Button, Card, DataTable, ErrorBlock, Field, Input, LoadingBlock, Notice, PageHeader, Stat, Textarea, useToast } from "./ui";
 import { ClientApiError, apiFetch, qs, useApi } from "@/lib/api-client";
-import { addDays, dateOf, dateTime, istDate, rupees } from "@/lib/format";
+import { addDays, dateOf, dateTime, istDate, plural, rupees } from "@/lib/format";
 
 interface Figures {
   cash_received: number;
@@ -99,12 +99,12 @@ export function ClosingPage() {
       ) : fig ? (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Cash taken" value={rupees(fig.cash_received)} sub={fig.cash_refunds ? `after ${rupees(fig.cash_refunds)} refunds` : `${fig.paid_orders} paid orders`} />
+            <Stat label="Cash taken" value={rupees(fig.cash_received)} sub={fig.cash_refunds ? `after ${rupees(fig.cash_refunds)} refunds` : plural(fig.paid_orders, "paid order")} />
             <Stat label="UPI" value={rupees(fig.upi_received)} />
             <Stat label="Card" value={rupees(fig.card_received)} />
-            <Stat label="Still unpaid" value={rupees(fig.unpaid_total)} sub={`${fig.unpaid_orders} orders`} tone={fig.unpaid_orders ? "warning" : "default"} href="/admin/orders" />
+            <Stat label="Still unpaid" value={rupees(fig.unpaid_total)} sub={plural(fig.unpaid_orders, "order")} tone={fig.unpaid_orders ? "warning" : "default"} href="/admin/orders" />
           </div>
-          {fig.open_orders > 0 && <Notice tone="warning">{fig.open_orders} orders from this day are still open. Settle them before closing so the cash figure is complete.</Notice>}
+          {fig.open_orders > 0 && <Notice tone="warning">{plural(fig.open_orders, "order")} from this day {fig.open_orders === 1 ? "is" : "are"} still open. Settle them before closing so the cash figure is complete.</Notice>}
 
           <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
             <Card title={data!.closing ? "Re-count this day" : "Count the drawer"} description={data!.closing ? `Closed by ${data!.closing.closed_by_name ?? "—"} · ${dateTime(data!.closing.closed_at)}. Saving again replaces it and is recorded in the audit log.` : undefined}>

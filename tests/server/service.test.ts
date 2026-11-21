@@ -90,6 +90,8 @@ describe("pre-orders, wait time, requests, feedback, UPI", () => {
     expect(() => validatePickup("2026-11-21T09:10:00+05:30", now)).toThrow(/at least 15 minutes/);
     expect(() => validatePickup("2026-11-21T09:40:00+05:30", now)).toThrow(/pickup times shown/);
     expect(() => validatePickup("2026-11-22T09:30:00+05:30", now)).toThrow(/later today/);
+    expect(() => validatePickup("2026-11-21T23:00:00+05:30", new Date("2026-11-21T15:00:00+05:30"))).toThrow(/last pickup time/);
+    expect(validatePickup("2026-11-21T22:45:00+05:30", new Date("2026-11-21T15:00:00+05:30"))).toBe(new Date("2026-11-21T22:45:00+05:30").toISOString());
   });
 
   it("estimates the wait from recent kitchen times and the queue", async () => {

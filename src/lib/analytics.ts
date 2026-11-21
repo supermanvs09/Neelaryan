@@ -183,11 +183,14 @@ export function menuEngineering(sold: SoldItem[], unsold: { menu_item_id: string
 }
 
 /* ── Pickup slots for pre-orders (15 min, from 20 min out, last 10:45 pm) ── */
+/** Last pickup slot of the day, café time (10:45 pm). */
+export const LAST_PICKUP_MINUTES = 22 * 60 + 45;
+
 export function pickupSlots(now = new Date(), clockMinutes: number, isoDate: string, max = 32) {
   const start = Math.ceil((clockMinutes + 20) / 15) * 15;
   const midnight = new Date(`${isoDate}T00:00:00+05:30`).getTime();
   const out: { iso: string; label: string }[] = [];
-  for (let m = start; m <= 22 * 60 + 45 && out.length < max; m += 15) {
+  for (let m = start; m <= LAST_PICKUP_MINUTES && out.length < max; m += 15) {
     const at = new Date(midnight + m * 60000);
     out.push({ iso: at.toISOString(), label: at.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" }) });
   }

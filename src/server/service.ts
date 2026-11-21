@@ -1,4 +1,5 @@
 import "server-only";
+import { LAST_PICKUP_MINUTES } from "@/lib/analytics";
 import { q, type Queryable } from "./db";
 import { bad, conflict, notFound } from "./http";
 import { round2 } from "@/lib/pricing";
@@ -38,6 +39,7 @@ export function validatePickup(iso: string, now = new Date()) {
   if (ahead < 15) throw bad("Choose a pickup time at least 15 minutes from now.", { scheduled_for: "Too soon" });
   if (ahead > 12 * 60 || cafeClock(at).date !== cafeClock(now).date) throw bad("Pre-orders are for later today only.", { scheduled_for: "Today only" });
   if (cafeClock(at).minutes % 15 !== 0) throw bad("Choose one of the pickup times shown.", { scheduled_for: "Not a slot" });
+  if (cafeClock(at).minutes > LAST_PICKUP_MINUTES) throw bad("The last pickup time is 10:45 pm.", { scheduled_for: "After closing" });
   return at.toISOString();
 }
 

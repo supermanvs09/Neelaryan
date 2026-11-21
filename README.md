@@ -83,6 +83,7 @@ Every variable is documented in [`.env.example`](.env.example).
 | `RESEND_API_KEY`, `EMAIL_FROM` | Email campaigns and birthday emails. |
 | `DEFAULT_COUNTRY_CODE` | Prefix for 10-digit mobiles (default `+91`). |
 | `TWILIO_STATUS_CALLBACK=off` | Skip delivery-status callbacks. They need a public https URL. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web push: “Notify me when it's ready” for guests, and lock-screen alerts for staff (new orders, UPI payments, table requests). Generate once with `npx web-push generate-vapid-keys`; `VAPID_SUBJECT` is `mailto:you@yourcafe.in`. Without them the buttons are hidden. |
 | `PGLITE_DIR`, `ALLOW_EMBEDDED_DB` | Local / embedded database only. |
 
 ### What happens when a provider isn't configured
@@ -125,6 +126,24 @@ Permissions are checked by the server on every API route and page. Hiding a menu
 * Accounts lock for 15 minutes after 5 failed sign-ins.
 
 ## How the main flows work
+
+**Ordering extras (Bite & Sip parity)**
+
+* **Languages.** Guests can switch the app between English, हिन्दी and తెలుగు; the choice is remembered on the phone. Menu item names stay as you wrote them.
+* **Offers / happy hours** (Menu → Offers). Percentage off chosen items or the whole menu, by days, time window and dates (café time, IST). The menu shows the offer price while it is live. The server works out the price again when the order is placed, so a stale phone can't get a discount that has ended. The discount applies to the item price only, never to add-ons. Each offer shows its orders and discount for the last 30 days.
+* **Wait time.** "Ready in about N min" uses the median of recent kitchen times plus 2 min per order waiting, limited to 5–60 min. It can be switched off in Settings.
+* **Pre-orders.** Takeaway guests can pick a 15-minute pickup slot later the same day, up to 10:45 pm. The order waits in a **Later** lane on the board and kitchen until 15 minutes before pickup.
+* **Pay by UPI.** With a UPI ID set in Settings → Payments, the guest's order page shows a QR code and a button that opens their UPI app with the exact amount. The guest taps "I've paid" and can add an optional reference; staff then see **UPI · verify** and confirm with one tap after checking their UPI app. Nothing is marked paid automatically, because there is no payment gateway.
+* **Call staff.** On a table's page guests can ask for water, cutlery, cleaning, the bill or help. Requests show on the orders board, kitchen and dashboard until marked done. Repeat taps are merged, and requests are rate-limited.
+* **Order again** puts a past order back in the cart, skipping anything sold out or changed. **Feedback** (1–5 stars and a comment) can be left once the order is served, for up to 3 days, and appears under Customers → Guest feedback.
+* **Ready-made items.** A menu item can be sold straight from a stock item, such as bottled drinks or cookies: one unit per portion. It shows "Only N left" and goes sold out automatically.
+* **Kitchen screen link** (Settings). A secret link for a kitchen tablet, with no sign-in. It can only accept, start and mark orders ready, and shows no prices or phone numbers. Making a new link stops the old one working.
+* **Kitchen tickets** print for 58 mm or 80 mm thermal printers from the order drawer or kitchen board.
+* **Close the day** (Money). Opening float + cash taken − cash paid out = what should be in the drawer. The page then shows whether the counted cash is short or over. Re-closing a day is recorded in the audit log.
+* **Shopping list & usage check** (Inventory). The shopping list shows what to buy to last 2, 3 or 7 days at the last 14 days' real usage, and can be copied or sent to WhatsApp. The usage check compares expected use with what stock counts found.
+* **Menu insights** (Reports). Items are grouped as Stars / Popular-low-profit / Profitable-rarely-ordered / Weak sellers, each with a suggested action. The P&L shows the change against the previous period.
+* **Installable app.** The site has a manifest, icons and a service worker (push + offline page), so guests can "Add to Home Screen". On iPhone, web push only works after adding to the Home Screen; the order page says so.
+
 
 **QR ordering**
 
@@ -222,4 +241,5 @@ Upload real product photos per item in **Menu** (they are stored in Supabase Sto
 - [ ] Recipes are added for dishes (Menu → item → Recipe) so stock and profit are accurate.
 - [ ] Builder add-on prices are confirmed with the owner. Honey ₹10, chocolate ₹15 and dry-fruit mix ₹20 came from mockups.
 - [ ] The terms & privacy text at `/legal/terms` is replaced with the café's reviewed policy.
-- [ ] Online payment is not built in: customers pay at the table or counter, and staff record payments. Adding a gateway (e.g. Razorpay) needs server-side order creation and signature verification.
+- [ ] Settings → Payments: enter the café's UPI ID and test the ₹1 QR with a phone. UPI is guest-claimed and staff-confirmed; there is no payment gateway. Adding one (e.g. Razorpay) needs server-side order creation and signature verification.
+- [ ] VAPID keys are set if you want ready alerts and staff phone alerts.
