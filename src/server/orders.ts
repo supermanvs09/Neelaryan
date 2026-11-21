@@ -72,6 +72,9 @@ export async function buildOrder(db: Queryable, input: BuildInput) {
     unit_price: number;
     line_total: number;
     notes: string;
+    discount: number;
+    offer_id: string | null;
+    offer_title: string | null;
   }[] = [];
 
   for (const l of input.lines) {
@@ -89,7 +92,22 @@ export async function buildOrder(db: Queryable, input: BuildInput) {
       unit_price: p.unitPrice,
       line_total: p.lineTotal,
       notes: (l.notes ?? "").trim().slice(0, 140),
+      discount: p.discount,
+      offer_id: p.offer?.id ?? null,
+      offer_title: p.offer?.title ?? null,
     });
+  }
+
+  // ready-made items: never accept more portions than are left
+  const readyMade = new Map<string, number>();
+  for (const it of items) {
+    const m = menu.items.find((x) => x.id === it.menu_item_id);
+    if (m?.stock_item_id) readyMade.set(m.id, (readyMade.get(m.id) ?? 0) + it.qty);
+  }
+  for (const [id, qty] of readyMade) {
+    const m = menu.items.find((x) => x.id === id)!;
+    const left = m.stock_left ?? 0;
+    if (qty > left) throw bad(left > 0 ? `Only ${left} ${m.name} left right now.` : `${m.name} just sold out.`);
   }
 
   if (input.products?.length) {
@@ -115,6 +133,9 @@ export async function buildOrder(db: Queryable, input: BuildInput) {
         unit_price: Number(price),
         line_total: round2(Number(price) * pl.qty),
         notes: "",
+        discount: 0,
+        offer_id: null,
+        offer_title: null,
       });
     }
   }
@@ -155,6 +176,10 @@ export interface CreateOrderInput extends BuildInput {
   createdBy: string | null;
   /** POS orders are confirmed by staff immediately. */
   autoAccept: boolean;
+  /** how the guest will pay (POS orders: "counter") */
+  paymentMethod?: "cash" | "upi" | "counter";
+  /** pre-order pickup time (takeaway, later today) */
+  scheduledFor?: string | null;
 }
 
 export async function createOrder(db: Queryable, input: CreateOrderInput) {
@@ -164,8 +189,8 @@ export async function createOrder(db: Queryable, input: CreateOrderInput) {
   const built = await buildOrder(db, input);
   const { rows } = await db.query<{ id: string; number: number; total: number }>(
     `insert into orders (type, channel, price_tier, table_id, customer_id, customer_name, customer_phone, subtotal, discount, service_charge, tax, total,
-                         points_used, redemption_id, notes, idempotency_key, access_hash, created_by)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+                         points_used, redemption_id, notes, idempotency_key, access_hash, created_by, payment_method, scheduled_for)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
      returning id, number, total`,
     [
       input.type,
@@ -186,15 +211,17 @@ export async function createOrder(db: Queryable, input: CreateOrderInput) {
       input.idempotencyKey,
       input.accessHash,
       input.createdBy,
+      input.paymentMethod ?? (input.channel === "pos" ? "counter" : "cash"),
+      input.scheduledFor ?? null,
     ],
   );
   const order = rows[0];
   for (const i of built.items) {
     const mods = [...i.modifiers, ...i.removed.map((r) => ({ id: "", name: `No ${r}`, group: "removed", price: 0 }))];
     await db.query(
-      `insert into order_items (order_id, menu_item_id, inventory_item_id, variant_id, name, variant_name, modifiers, qty, unit_price, line_total, notes)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      [order.id, i.menu_item_id, i.inventory_item_id, i.variant_id, i.name, i.variant_name, JSON.stringify(mods.filter((m) => m.id || m.group === "removed")), i.qty, i.unit_price, i.line_total, i.notes],
+      `insert into order_items (order_id, menu_item_id, inventory_item_id, variant_id, name, variant_name, modifiers, qty, unit_price, line_total, notes, discount, offer_id, offer_title)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+      [order.id, i.menu_item_id, i.inventory_item_id, i.variant_id, i.name, i.variant_name, JSON.stringify(mods.filter((m) => m.id || m.group === "removed")), i.qty, i.unit_price, i.line_total, i.notes, i.discount, i.offer_id, i.offer_title],
     );
   }
   await db.query("insert into order_events (order_id, status, user_id) values ($1,'new',$2)", [order.id, input.createdBy]);
@@ -329,12 +356,16 @@ export async function publicOrder(orderId: string) {
   const { rows } = await q<Record<string, unknown>>(
     `select o.id, o.number, o.type, o.status, o.payment_status, o.subtotal, o.discount, o.service_charge, o.tax, o.total, o.amount_paid, o.points_used,
             o.customer_name, o.created_at, o.accepted_at, o.preparing_at, o.ready_at, o.served_at, o.completed_at, o.cancelled_at, o.cancel_reason,
-            o.customer_id, t.label as table_label,
+            o.customer_id, t.label as table_label, t.qr_token as table_token, o.payment_method, o.upi_claimed_at, o.scheduled_for,
+            (select json_build_object('rating', f.rating, 'comment', f.comment) from order_feedback f where f.order_id = o.id) as feedback,
             (select coalesce(pt.points, 0) from point_transactions pt where pt.order_id = o.id and pt.kind = 'earn') as points_earned
        from orders o left join dining_tables t on t.id = o.table_id where o.id = $1`,
     [orderId],
   );
   if (!rows[0]) return null;
-  const items = await q("select name, variant_name, modifiers, qty, unit_price, line_total, notes from order_items where order_id = $1 order by id", [orderId]);
-  return { ...rows[0], linked: Boolean(rows[0].customer_id), customer_id: undefined, items: items.rows };
+  const items = await q("select menu_item_id, variant_id, name, variant_name, modifiers, qty, unit_price, line_total, notes, discount, offer_title from order_items where order_id = $1 order by id", [orderId]);
+  // the table's QR token is only needed for "call staff"; never expose it once the order is over
+  const o = rows[0] as Record<string, unknown>;
+  const open = ["new", "accepted", "preparing", "ready", "served"].includes(String(o.status));
+  return { ...o, table_token: open ? o.table_token : null, linked: Boolean(o.customer_id), customer_id: undefined, items: items.rows };
 }

@@ -1,3 +1,5 @@
+import { bestOffer, cafeClock, discountFor, type Offer } from "./offers";
+
 /**
  * Order pricing — shared by the customer app (to show prices) and the server
  * (which is the authority). Rules:
@@ -32,6 +34,8 @@ export interface PricingItem {
 export interface PricingMenu {
   items: PricingItem[];
   groups: PricingGroup[];
+  /** active offers; only those live at `at` apply */
+  offers?: Offer[];
 }
 
 export interface LineInput {
@@ -60,12 +64,17 @@ export type PricedLine =
       modifierIds: string[];
       unitPrice: number;
       lineTotal: number;
+      /** per-unit offer discount on the base price (already taken off unitPrice) */
+      discount: number;
+      offer: { id: string; title: string; percent_off: number } | null;
+      /** base (size) price before the offer */
+      basePrice: number;
     }
   | { ok: false; error: string };
 
 export const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-export function priceLine(menu: PricingMenu, line: LineInput): PricedLine {
+export function priceLine(menu: PricingMenu, line: LineInput, at: Date = new Date()): PricedLine {
   const item = menu.items.find((i) => i.id === line.item_id);
   if (!item) return { ok: false, error: "This item is no longer on the menu." };
   if (item.status !== "available") return { ok: false, error: `${item.name} is sold out right now.` };
@@ -118,7 +127,10 @@ export function priceLine(menu: PricingMenu, line: LineInput): PricedLine {
     }
   }
 
-  const unitPrice = round2(base + extra);
+  // offers come off the base price only (never add-ons), rounded down to whole rupees
+  const offer = menu.offers?.length ? bestOffer(item.id, menu.offers, cafeClock(at)) : null;
+  const discount = offer ? discountFor(base, offer.percent_off) : 0;
+  const unitPrice = round2(base - discount + extra);
   return {
     ok: true,
     item,
@@ -129,6 +141,9 @@ export function priceLine(menu: PricingMenu, line: LineInput): PricedLine {
     modifierIds: chosen.map((c) => c.id).sort(),
     unitPrice,
     lineTotal: round2(unitPrice * line.qty),
+    discount,
+    offer: offer && discount > 0 ? { id: offer.id, title: offer.title, percent_off: offer.percent_off } : null,
+    basePrice: base,
   };
 }
 

@@ -24,7 +24,9 @@ export const DEFAULT_SETTINGS: Record<string, unknown> = {
     timezone: "Asia/Kolkata",
   },
   tax: { gst_percent: 5, service_charge_percent: 0 },
-  ordering: { accepting_orders: true, takeaway_enabled: true, closed_message: "We're not taking orders right now. Please check back soon." },
+  ordering: { accepting_orders: true, takeaway_enabled: true, closed_message: "We're not taking orders right now. Please check back soon.", preorders_enabled: true, show_wait_time: true },
+  payments: { cash_enabled: true, upi_enabled: false, upi_id: "", upi_payee_name: "NEELARYAN Café" },
+  kitchen: { link_enabled: false, link_token: "" },
   loyalty: {
     enabled: true,
     points_per_100: 5,

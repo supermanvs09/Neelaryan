@@ -26,23 +26,38 @@ const Ordering = z.object({
   accepting_orders: z.boolean(),
   takeaway_enabled: z.boolean(),
   closed_message: z.string().trim().min(3).max(200),
+  preorders_enabled: z.boolean().default(true),
+  show_wait_time: z.boolean().default(true),
 });
+const Payments = z
+  .object({
+    cash_enabled: z.boolean(),
+    upi_enabled: z.boolean(),
+    upi_id: z
+      .string()
+      .trim()
+      .regex(/^([A-Za-z0-9._-]{2,64}@[A-Za-z][A-Za-z0-9]{1,63})?$/, "Enter a UPI ID like cafe@okaxis"),
+    upi_payee_name: z.string().trim().min(1).max(50),
+  })
+  .refine((v) => !v.upi_enabled || v.upi_id, { message: "Enter your UPI ID to turn on UPI payments.", path: ["upi_id"] })
+  .refine((v) => v.cash_enabled || v.upi_enabled, { message: "Keep at least one way to pay switched on.", path: ["cash_enabled"] });
 
 const Schema = z.discriminatedUnion("section", [
   z.object({ section: z.literal("business"), value: Business }),
   z.object({ section: z.literal("tax"), value: Tax }),
   z.object({ section: z.literal("ordering"), value: Ordering }),
+  z.object({ section: z.literal("payments"), value: Payments }),
 ]);
 
 export const GET = api(
   async () => {
-    const [business, tax, ordering] = await Promise.all([getSetting("business"), getSetting("tax"), getSetting("ordering")]);
-    return { business, tax, ordering };
+    const [business, tax, ordering, payments] = await Promise.all([getSetting("business"), getSetting("tax"), getSetting("ordering"), getSetting("payments")]);
+    return { business, tax, ordering, payments };
   },
   { permission: ["settings.manage", "orders.manage"] },
 );
 
-const LABEL = { business: "business details", tax: "tax settings", ordering: "online ordering" } as const;
+const LABEL = { business: "business details", tax: "tax settings", ordering: "online ordering", payments: "payment options" } as const;
 
 /**
  * Settings. "ordering" (pause / resume online orders) is allowed to anyone who manages orders,

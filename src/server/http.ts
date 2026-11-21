@@ -116,10 +116,22 @@ export function errorResponse(e: unknown) {
   return NextResponse.json({ error: "Something went wrong on our side. Please try again.", code: "SERVER" }, { status: 500 });
 }
 
+/** Largest JSON body any route accepts. Keeps oversized payloads away from validation entirely. */
+export const MAX_JSON_BYTES = 256 * 1024;
+
 export async function body<S extends ZodTypeAny>(req: NextRequest, schema: S): Promise<output<S>> {
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > MAX_JSON_BYTES) throw new ApiError(413, "That request is too large.", "TOO_LARGE");
+  let text: string;
+  try {
+    text = await req.text();
+  } catch {
+    throw bad("The request body couldn't be read.");
+  }
+  if (Buffer.byteLength(text) > MAX_JSON_BYTES) throw new ApiError(413, "That request is too large.", "TOO_LARGE");
   let raw: unknown;
   try {
-    raw = await req.json();
+    raw = JSON.parse(text);
   } catch {
     throw bad("The request body isn't valid JSON.");
   }

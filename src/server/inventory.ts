@@ -17,6 +17,8 @@ interface Need {
   item_id: string;
   qty: number;
   strict: boolean; // directly sold product — must be in stock
+  /** strict need measured in plain units (ready-made portions), not the product's selling unit */
+  perUnit?: boolean;
 }
 
 interface OrderLineForStock {
@@ -70,7 +72,7 @@ export async function deductForOrder(db: Queryable, orderId: string, userId: str
   const [recipes, modRecipes, itemCosts, variantCosts, modCosts] = await Promise.all([
     db.query<{ menu_item_id: string; inventory_item_id: string; qty: number }>("select menu_item_id, inventory_item_id, qty from recipe_lines where menu_item_id = any($1::uuid[])", [menuIds]),
     db.query<{ modifier_id: string; inventory_item_id: string; qty: number }>("select modifier_id, inventory_item_id, qty from modifier_recipe_lines where modifier_id = any($1::uuid[])", [modIds]),
-    db.query<{ id: string; cost_price: number | null }>("select id, cost_price from menu_items where id = any($1::uuid[])", [menuIds]),
+    db.query<{ id: string; cost_price: number | null; stock_item_id: string | null }>("select id, cost_price, stock_item_id from menu_items where id = any($1::uuid[])", [menuIds]),
     db.query<{ id: string; cost_price: number | null }>("select id, cost_price from item_variants where id = any($1::uuid[])", [lines.map((l) => l.variant_id).filter(Boolean)]),
     db.query<{ id: string; cost_price: number | null }>("select id, cost_price from modifiers where id = any($1::uuid[])", [modIds]),
   ]);
@@ -80,6 +82,9 @@ export async function deductForOrder(db: Queryable, orderId: string, userId: str
   for (const l of lines) {
     const needs: Need[] = [];
     if (l.inventory_item_id) needs.push({ item_id: l.inventory_item_id, qty: 1, strict: true }); // scaled by sell_unit_qty below
+    // ready-made menu item: one unit of its stock item per portion (can't be oversold)
+    const readyMade = itemCosts.rows.find((r) => r.id === l.menu_item_id)?.stock_item_id;
+    if (readyMade) needs.push({ item_id: readyMade, qty: 1, strict: true, perUnit: true });
     for (const r of recipes.rows.filter((r) => r.menu_item_id === l.menu_item_id)) needs.push({ item_id: r.inventory_item_id, qty: r.qty, strict: false });
     for (const m of l.modifiers ?? []) for (const r of modRecipes.rows.filter((r) => r.modifier_id === m.id)) needs.push({ item_id: r.inventory_item_id, qty: r.qty, strict: false });
     perLine.set(l.id, needs);
@@ -93,7 +98,7 @@ export async function deductForOrder(db: Queryable, orderId: string, userId: str
     for (const n of perLine.get(l.id)!) {
       const inv = items.get(n.item_id);
       if (!inv) continue;
-      const each = n.strict ? Number(inv.sell_unit_qty ?? 1) : n.qty;
+      const each = n.strict && !n.perUnit ? Number(inv.sell_unit_qty ?? 1) : n.qty;
       const t = totals.get(n.item_id) ?? { qty: 0, strict: false };
       t.qty += each * l.qty;
       t.strict ||= n.strict;
@@ -131,12 +136,12 @@ export async function deductForOrder(db: Queryable, orderId: string, userId: str
           complete = false;
           continue;
         }
-        const each = n.strict ? Number(inv.sell_unit_qty ?? 1) : n.qty;
+        const each = n.strict && !n.perUnit ? Number(inv.sell_unit_qty ?? 1) : n.qty;
         sum += each * Number(inv.avg_cost);
       }
       cost = complete ? sum : null;
     }
-    const recipeCovered = recipes.rows.some((r) => r.menu_item_id === l.menu_item_id);
+    const recipeCovered = recipes.rows.some((r) => r.menu_item_id === l.menu_item_id) || !!itemCosts.rows.find((r) => r.id === l.menu_item_id)?.stock_item_id;
     if (!recipeCovered && l.menu_item_id) {
       const manual = variantCosts.rows.find((v) => v.id === l.variant_id)?.cost_price ?? itemCosts.rows.find((i) => i.id === l.menu_item_id)?.cost_price ?? null;
       if (manual !== null) {

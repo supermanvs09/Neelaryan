@@ -17,6 +17,8 @@ export const ItemSchema = z.object({
   diet: z.enum(["veg", "egg", "nonveg"]),
   tags: z.array(z.enum(["bestseller", "new", "healthy", "protein", "spicy", "recommended"])).max(6).default([]),
   image_id: z.string().uuid().nullable().default(null),
+  /** ready-made: sell one unit of this inventory item per portion */
+  stock_item_id: z.string().uuid().nullable().default(null),
   visual: z.enum(["art", "bowl", "glass"]).default("art"),
   art_kind: z.string().max(20).default("coffee"),
   tint: z.array(z.string().regex(/^#[0-9a-fA-F]{6}$/)).max(2).default([]),
@@ -91,6 +93,10 @@ export async function saveItem(db: Queryable, ctx: Ctx, id: string | null, input
   const cat = await db.query("select 1 from menu_categories where id = $1", [input.category_id]);
   if (!cat.rows.length) throw bad("Choose a category.", { category_id: "Choose a category." });
   if (input.variants.length && !input.variants.some((v) => v.is_default)) input.variants[0].is_default = true;
+  if (input.stock_item_id) {
+    const inv = await db.query("select 1 from inventory_items where id = $1 and is_active", [input.stock_item_id]);
+    if (!inv.rows.length) throw bad("That stock item no longer exists.", { stock_item_id: "Choose a stock item" });
+  }
 
   // modifiers marked as included must belong to the item's groups
   if (input.default_modifier_ids.length) {
@@ -113,19 +119,20 @@ export async function saveItem(db: Queryable, ctx: Ctx, id: string | null, input
     input.tint,
     input.status,
     input.is_featured,
+    input.stock_item_id,
   ];
   let itemId = id;
   if (id) {
     await db.query(
       `update menu_items set category_id=$1, name=$2, slug=$3, description=$4, price=$5, cost_price=$6, diet=$7, tags=$8, image_id=$9, visual=$10,
-         art_kind=$11, tint=$12, status=$13, is_featured=$14, updated_at=now() where id=$15`,
+         art_kind=$11, tint=$12, status=$13, is_featured=$14, stock_item_id=$15, updated_at=now() where id=$16`,
       [...values, id],
     );
   } else {
     const sort = (await db.query<{ s: number }>("select coalesce(max(sort), 0) + 1 as s from menu_items where category_id = $1", [input.category_id])).rows[0].s;
     const { rows } = await db.query<{ id: string }>(
-      `insert into menu_items (category_id, name, slug, description, price, cost_price, diet, tags, image_id, visual, art_kind, tint, status, is_featured, sort)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) returning id`,
+      `insert into menu_items (category_id, name, slug, description, price, cost_price, diet, tags, image_id, visual, art_kind, tint, status, is_featured, stock_item_id, sort)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) returning id`,
       [...values, sort],
     );
     itemId = rows[0].id;

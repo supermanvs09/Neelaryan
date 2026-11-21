@@ -47,6 +47,7 @@ export const GET = api(
     const { rows } = await q(
       `select o.id, o.number, o.type, o.channel, o.price_tier, o.status, o.payment_status, o.total, o.amount_paid, o.discount,
               o.customer_name, o.customer_phone, o.notes, o.created_at, o.accepted_at, o.ready_at, o.updated_at,
+              o.payment_method, o.upi_claimed_at, o.upi_reference, o.scheduled_for,
               t.label as table_label, o.table_id, o.customer_id,
               coalesce((select json_agg(json_build_object('name', i.name, 'variant', i.variant_name, 'qty', i.qty, 'modifiers', i.modifiers, 'notes', i.notes) order by i.id)
                           from order_items i where i.order_id = o.id), '[]') as items

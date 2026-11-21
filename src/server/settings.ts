@@ -19,6 +19,21 @@ export interface OrderingSettings {
   accepting_orders: boolean;
   takeaway_enabled: boolean;
   closed_message: string;
+  /** guests may order takeaway for a pickup time later today */
+  preorders_enabled: boolean;
+  /** show "ready in about N min" before ordering */
+  show_wait_time: boolean;
+}
+export interface PaymentSettings {
+  cash_enabled: boolean;
+  upi_enabled: boolean;
+  upi_id: string;
+  upi_payee_name: string;
+}
+export interface KitchenSettings {
+  /** secret-link kitchen screen (no login) */
+  link_enabled: boolean;
+  link_token: string;
 }
 export interface LoyaltySettings {
   enabled: boolean;
@@ -45,6 +60,8 @@ export interface SettingsMap {
   ordering: OrderingSettings;
   loyalty: LoyaltySettings;
   notifications: NotificationSettings;
+  payments: PaymentSettings;
+  kitchen: KitchenSettings;
 }
 
 export type SettingKey = keyof SettingsMap;

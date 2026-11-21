@@ -1,6 +1,7 @@
 import "server-only";
 import { q, type Queryable } from "./db";
 import { publicUrl, supabaseStorageEnabled } from "./storage";
+import type { Offer } from "@/lib/offers";
 
 export interface MenuModifier {
   id: string;
@@ -43,6 +44,10 @@ export interface MenuItemRow {
   image_id: string | null;
   /** set when the photo lives in Supabase Storage */
   image_path: string | null;
+  /** ready-made: sold one unit at a time from this inventory item */
+  stock_item_id: string | null;
+  /** portions left in stock (ready-made items only) */
+  stock_left: number | null;
   art_kind: string;
   tint: string[];
   visual: "art" | "bowl" | "glass";
@@ -71,11 +76,12 @@ export const imageUrl = (id: string | null, path: string | null = null) => (path
 export async function loadMenu(scope: "public" | "admin", db: Queryable | null = null) {
   const run = db ? db.query.bind(db) : q;
   const pub = scope === "public";
-  const [cats, items, variants, groups, mods, links, defaults] = await Promise.all([
+  const [cats, items, variants, groups, mods, links, defaults, offers] = await Promise.all([
     run<MenuCategoryRow>(`select id, name, slug, description, art_kind, sort, is_active from menu_categories ${pub ? "where is_active" : ""} order by sort, name`),
     run<Omit<MenuItemRow, "variants" | "group_ids" | "default_modifier_ids">>(
       `select id, category_id, name, slug, description, price, cost_price, diet, tags, image_id,
-              (select storage_path from images im where im.id = menu_items.image_id) as image_path, art_kind, tint, visual, status, is_active, is_featured, sort
+              (select storage_path from images im where im.id = menu_items.image_id) as image_path, stock_item_id,
+              (select floor(greatest(inv.stock_qty, 0))::int from inventory_items inv where inv.id = menu_items.stock_item_id and inv.is_active) as stock_left, art_kind, tint, visual, status, is_active, is_featured, sort
          from menu_items ${pub ? "where is_active and status <> 'hidden'" : "where is_active"} order by sort, name`,
     ),
     run<MenuVariant & { item_id: string }>(`select id, item_id, name, price, cost_price, is_default, is_active, sort from item_variants ${pub ? "where is_active" : ""} order by sort, name`),
@@ -83,6 +89,13 @@ export async function loadMenu(scope: "public" | "admin", db: Queryable | null =
     run<MenuModifier & { group_id: string }>(`select id, group_id, name, price, visual_key, is_active, sort from modifiers ${pub ? "where is_active" : ""} order by sort, name`),
     run<{ item_id: string; group_id: string }>("select item_id, group_id from item_modifier_groups order by sort"),
     run<{ item_id: string; modifier_id: string }>("select item_id, modifier_id from item_default_modifiers"),
+    run<Offer>(
+      `select id, title, percent_off, menu_item_ids, days::int[] as days, to_char(starts_at, 'HH24:MI') as starts_at,
+              case when ends_at = '24:00'::time then '24:00' else to_char(ends_at, 'HH24:MI') end as ends_at,
+              valid_from::text, valid_to::text, is_active
+         from offers where is_active and (valid_to is null or valid_to >= (now() at time zone 'Asia/Kolkata')::date - 1)
+        order by percent_off desc, title`,
+    ),
   ]);
 
   const modsByGroup = new Map<string, MenuModifier[]>();
@@ -110,9 +123,11 @@ export async function loadMenu(scope: "public" | "admin", db: Queryable | null =
       variants: variantsByItem.get(i.id) ?? [],
       group_ids: groupsByItem.get(i.id) ?? [],
       default_modifier_ids: defaultsByItem.get(i.id) ?? [],
+      // a ready-made item with nothing left sells out by itself
+      status: pub && i.stock_item_id && (i.stock_left ?? 0) < 1 && i.status === "available" ? ("sold_out" as const) : i.status,
     }));
 
-  return { categories: cats.rows, items: itemList, groups: groupList };
+  return { categories: cats.rows, items: itemList, groups: groupList, offers: offers.rows };
 }
 
 export type LoadedMenu = Awaited<ReturnType<typeof loadMenu>>;
@@ -122,6 +137,7 @@ export function publicMenuPayload(m: LoadedMenu) {
   return {
     categories: m.categories.map(({ id, name, slug, description, art_kind }) => ({ id, name, slug, description, art_kind })),
     groups: m.groups.map((g) => ({ ...g, modifiers: g.modifiers.map(({ id, name, price, visual_key }) => ({ id, name, price, visual_key })) })),
+    offers: m.offers,
     items: m.items.map((i) => ({
       id: i.id,
       category_id: i.category_id,
@@ -138,6 +154,7 @@ export function publicMenuPayload(m: LoadedMenu) {
       status: i.status,
       is_featured: i.is_featured,
       variants: i.variants.map(({ id, name, price, is_default }) => ({ id, name, price, is_default })),
+      stock_left: i.stock_item_id ? i.stock_left ?? 0 : null,
       group_ids: i.group_ids,
       default_modifier_ids: i.default_modifier_ids,
     })),

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { notifyLater, pushOrderReady } from "@/server/push";
 import { api, body } from "@/server/http";
 import { tx } from "@/server/db";
 import { transition } from "@/server/orders";
@@ -19,6 +20,7 @@ export const POST = api(
       if (to === "cancelled" || to === "rejected") await audit(t, ctx, to, "order", id, `${to === "cancelled" ? "Cancelled" : "Rejected"} order #${r.number}: ${reason}`);
       return r;
     });
+    if (to === "ready") notifyLater(() => pushOrderReady(id));
     return { ok: true, status: o.status };
   },
   { permission: ["orders.manage", "kitchen.update"] },

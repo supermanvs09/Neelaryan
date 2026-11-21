@@ -5,6 +5,8 @@ import { getSetting } from "@/server/settings";
 import { createOrder } from "@/server/orders";
 import { sha256 } from "@/server/auth/session";
 import { rateLimit } from "@/server/ratelimit";
+import { validatePickup } from "@/server/service";
+import { notifyLater, pushStaff } from "@/server/push";
 
 const Line = z.object({
   item_id: z.string().uuid(),
@@ -26,6 +28,9 @@ const Schema = z.object({
   expected_total: z.number().min(0),
   use_points: z.number().int().min(0).max(1_000_000).default(0),
   reward_code: z.string().trim().max(20).nullable().optional(),
+  payment_method: z.enum(["cash", "upi"]).default("cash"),
+  /** pre-order pickup time (takeaway only), ISO */
+  scheduled_for: z.string().max(40).nullable().optional(),
 });
 
 /**
@@ -50,6 +55,16 @@ export const POST = api(
       throw new ApiError(503, "Takeaway orders are paused right now.", "TAKEAWAY_OFF");
     }
 
+    const payments = await getSetting("payments");
+    if (input.payment_method === "upi" && !(payments.upi_enabled && payments.upi_id)) throw bad("UPI isn't available right now. Please choose cash.", { payment_method: "Unavailable" });
+    if (input.payment_method === "cash" && !payments.cash_enabled) throw bad("Please pay by UPI.", { payment_method: "Unavailable" });
+    let scheduledFor: string | null = null;
+    if (input.scheduled_for) {
+      if (input.type !== "takeaway") throw bad("Pre-orders are for takeaway pickup.");
+      if (!ordering.preorders_enabled) throw bad("Pre-orders are paused right now.");
+      scheduledFor = validatePickup(input.scheduled_for);
+    }
+
     const open = await q<{ n: number }>("select count(*)::int as n from orders where customer_phone = $1 and status in ('new','accepted','preparing','ready') and created_at > now() - interval '6 hours'", [input.customer_phone]);
     if (open.rows[0].n >= 5) throw conflict("You already have several orders in progress. Please wait for them or ask our team.");
 
@@ -70,12 +85,18 @@ export const POST = api(
         accessHash: sha256(input.access_token),
         createdBy: null,
         autoAccept: false,
+        paymentMethod: input.payment_method,
+        scheduledFor,
       });
       if (!o.replayed && Math.abs(Number(o.total) - input.expected_total) > 0.009) {
         throw new ApiError(409, `Prices changed while you were ordering — the new total is ₹${Number(o.total)}. Please review your cart.`, "TOTAL_CHANGED", { expected_total: String(o.total) });
       }
       return o;
     });
+    if (!order.replayed) {
+      const where = tableId ? `Table ${(await q<{ label: string }>("select label from dining_tables where id = $1", [tableId])).rows[0]?.label ?? ""}` : scheduledFor ? `Pre-order ${new Date(scheduledFor).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" })}` : "Takeaway";
+      notifyLater(() => pushStaff({ title: `New order #${order.number}`, body: `${where} · ₹${Number(order.total)}`, url: "/admin/orders", tag: `new-${order.id}` }));
+    }
     return { id: order.id, number: order.number, total: order.total };
   },
   { auth: "public" },
