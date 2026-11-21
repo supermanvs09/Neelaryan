@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/shell/AppShell";
-import { ProductSheet } from "@/components/menu/ProductSheet";
+import { themeScript } from "@/components/theme";
 
 const display = Cormorant_Garamond({
   subsets: ["latin"],
@@ -19,9 +18,8 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: { default: "NEELARYAN Café — Crave the Goodness", template: "%s · NEELARYAN Café" },
-  description:
-    "Order from NEELARYAN Café — dine in with a table QR or order online. Build your own oats bowl and milkshake in 3D, track your order live and collect stamps.",
+  title: { default: "NEELARYAN Café — Crave the Goodness", template: "%s · NEELARYAN" },
+  description: "Order at NEELARYAN Café: scan your table QR or order takeaway, build your own oats bowl or milkshake, track your order live and earn rewards.",
   applicationName: "NEELARYAN Café",
 };
 
@@ -29,16 +27,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#fbf6ec",
+  themeColor: "#F4EEE2",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-dvh bg-ivory font-sans text-ink antialiased">
-        <AppShell>{children}</AppShell>
-        <ProductSheet />
-      </body>
+    <html lang="en-IN" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">{children}</body>
     </html>
   );
 }

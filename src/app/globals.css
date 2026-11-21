@@ -2,30 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens — derived from the NEELARYAN palette:
+ *   Champagne #DBC7AC · Ivory #F4EEE2 · French Blue #7A94AC · Gold #B58A45 · Navy #23324C
+ * Values are RGB channels so Tailwind opacity modifiers work.
+ * French Blue itself is too light for white text (≈3:1), so interactive
+ * elements use a deeper French Blue (#45607B, 6.3:1 with white).
+ */
 @layer base {
   :root {
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
     color-scheme: light;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+    --bg: 244 238 226;          /* Ivory */
+    --surface: 251 248 242;     /* lifted ivory: cards, tables, inputs */
+    --surface-2: 239 229 214;   /* Champagne, light: subtle panels, table heads */
+    --line: 222 208 186;        /* Champagne border */
+    --line-strong: 196 176 147;
+    --fg: 35 50 76;             /* Navy */
+    --muted: 92 104 124;        /* 5.2:1 on ivory */
+    --primary: 69 96 123;       /* deep French Blue */
+    --primary-hover: 57 81 106;
+    --primary-fg: 255 255 255;
+    --primary-soft: 222 230 238;/* French Blue tint: selected nav, focus */
+    --accent: 181 138 69;       /* Gold */
+    --accent-fg: 35 50 76;
+    --accent-soft: 241 230 210;
+    --accent-text: 126 94 40;   /* gold readable on ivory (5.1:1) */
+    --danger: 166 54 34;
+    --danger-soft: 248 226 220;
+    --success: 47 122 75;
+    --success-soft: 223 240 229;
+    --warning: 154 107 18;
+    --warning-soft: 247 236 208;
+    --shadow: 35 50 76;
+
+    /* legacy names used by the customer app */
+    --white: 255 255 255;
+    --navy-950: 18 26 41;
+    --navy-900: 35 50 76;
+    --navy-800: 35 50 76;
+    --navy-700: 46 64 95;
+    --navy-600: 59 80 114;
+    --navy-500: 77 99 133;
+    --gold-700: 126 94 40;
+    --gold-600: 154 115 55;
+    --gold-500: 181 138 69;
+    --gold-400: 201 164 105;
+    --gold-300: 221 193 151;
+    --gold-200: 238 224 198;
+    --ivory: 244 238 226;
+    --cream: 239 229 214;
+    --sand: 219 199 172;
+    --sand-200: 239 229 214;
+    --sand-400: 214 197 170;
+    --sand-600: 168 145 111;
+    --ink: 35 50 76;
+    --ink-soft: 61 74 96;
+    --ink-muted: 92 104 124;
+    --veg: 31 128 58;
+    --nonveg: 163 54 31;
+    --egg: 168 104 6;
   }
+
+  /* Dark: Navy foundation, Ivory text, lighter French Blue for interaction, Gold for highlights */
+  :root.dark {
+    color-scheme: dark;
+    --bg: 17 25 40;
+    --surface: 26 37 57;
+    --surface-2: 33 46 70;
+    --line: 47 63 92;
+    --line-strong: 70 89 122;
+    --fg: 244 238 226;
+    --muted: 168 179 196;
+    --primary: 143 169 194;
+    --primary-hover: 166 189 210;
+    --primary-fg: 17 25 40;
+    --primary-soft: 41 59 88;
+    --accent: 201 164 105;
+    --accent-fg: 17 25 40;
+    --accent-soft: 64 54 38;
+    --accent-text: 221 193 151;
+    --danger: 232 128 104;
+    --danger-soft: 68 34 30;
+    --success: 110 192 140;
+    --success-soft: 29 56 43;
+    --warning: 226 180 92;
+    --warning-soft: 62 50 26;
+    --shadow: 0 0 0;
+
+    --white: 26 37 57;
+    --navy-950: 8 12 22;
+    --navy-900: 244 238 226;
+    --navy-800: 143 169 194;
+    --navy-700: 166 189 210;
+    --navy-600: 186 203 220;
+    --navy-500: 205 216 228;
+    --gold-700: 221 193 151;
+    --gold-600: 211 178 125;
+    --gold-500: 201 164 105;
+    --gold-400: 181 138 69;
+    --gold-300: 221 193 151;
+    --gold-200: 64 54 38;
+    --ivory: 17 25 40;
+    --cream: 33 46 70;
+    --sand: 47 63 92;
+    --sand-200: 33 46 70;
+    --sand-400: 54 71 102;
+    --sand-600: 120 134 156;
+    --ink: 244 238 226;
+    --ink-soft: 214 218 226;
+    --ink-muted: 168 179 196;
+    --veg: 110 192 140;
+    --nonveg: 232 128 104;
+    --egg: 226 180 92;
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-padding-top: 9rem;
+    background: rgb(var(--bg));
   }
   body {
     overflow-x: hidden;
+    background: rgb(var(--bg));
+    color: rgb(var(--fg));
   }
   ::selection {
-    background: #e8d3a0;
-    color: #0b1a33;
+    background: rgb(var(--primary-soft));
+    color: rgb(var(--fg));
   }
   :focus-visible {
-    outline: 2px solid #a8812f;
+    outline: 2px solid rgb(var(--primary));
     outline-offset: 2px;
     border-radius: 6px;
   }
   button,
   [role="button"] {
     touch-action: manipulation;
+  }
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    color-scheme: inherit;
   }
 }
 
@@ -35,32 +154,31 @@
     font-feature-settings: "liga", "lnum";
     font-variant-numeric: lining-nums;
   }
-  .text-gold-gradient {
-    background: linear-gradient(100deg, #8a6a22 0%, #c9a04a 30%, #f2e0ac 50%, #c9a04a 70%, #8a6a22 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
   }
+
+  /* customer app buttons */
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-[transform,background-color,box-shadow,color] duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-navy-800 text-ivory shadow-lift hover:bg-navy-700;
+    @apply btn bg-primary text-primary-fg hover:bg-primary-hover;
   }
   .btn-gold {
-    @apply btn bg-gradient-to-b from-gold-400 to-gold-500 text-navy-900 shadow-gold hover:from-gold-300 hover:to-gold-400;
+    @apply btn bg-accent text-accent-fg hover:bg-gold-400;
   }
   .btn-ghost {
-    @apply btn border border-sand-400 bg-ivory/70 text-navy-800 hover:border-gold-500 hover:bg-white;
+    @apply btn border border-line bg-surface text-fg hover:border-line-strong;
   }
   .chip {
     @apply inline-flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors;
   }
   .card {
-    @apply rounded-3xl border border-sand-400/60 bg-white/70 shadow-card backdrop-blur-[2px];
+    @apply rounded-2xl border border-line bg-surface shadow-card;
   }
   .eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.22em] text-gold-700;
+    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-accent-text;
   }
   .no-scrollbar {
     scrollbar-width: none;
@@ -69,14 +187,23 @@
     display: none;
   }
   .skeleton {
-    background: linear-gradient(90deg, #efe5d1 0%, #f8f1e2 50%, #efe5d1 100%);
+    background: linear-gradient(90deg, rgb(var(--surface-2)) 0%, rgb(var(--surface)) 50%, rgb(var(--surface-2)) 100%);
     background-size: 200% 100%;
     @apply animate-skeleton;
   }
   .pb-safe {
     padding-bottom: calc(var(--safe-bottom) + 0.75rem);
   }
+
+  /* admin form controls */
+  .field-input {
+    @apply h-10 w-full rounded-lg border border-line bg-surface px-3 text-[14px] text-fg outline-none transition-colors placeholder:text-muted/70 hover:border-line-strong focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60;
+  }
+  .field-input[aria-invalid="true"] {
+    @apply border-danger focus:ring-danger/20;
+  }
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   *,

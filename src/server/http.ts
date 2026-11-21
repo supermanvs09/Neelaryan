@@ -1,6 +1,6 @@
 import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
-import { ZodError, type ZodType } from "zod";
+import { ZodError, type ZodTypeAny, type output } from "zod";
 import { SESSION_COOKIE, userFromToken, type SessionUser } from "./auth/session";
 import type { Permission } from "./auth/permissions";
 import { customerFromRequest, type SessionCustomer } from "./customers/session";
@@ -116,7 +116,7 @@ export function errorResponse(e: unknown) {
   return NextResponse.json({ error: "Something went wrong on our side. Please try again.", code: "SERVER" }, { status: 500 });
 }
 
-export async function body<T>(req: NextRequest, schema: ZodType<T>): Promise<T> {
+export async function body<S extends ZodTypeAny>(req: NextRequest, schema: S): Promise<output<S>> {
   let raw: unknown;
   try {
     raw = await req.json();
@@ -126,7 +126,7 @@ export async function body<T>(req: NextRequest, schema: ZodType<T>): Promise<T> 
   return schema.parse(raw);
 }
 
-export function searchParams<T>(req: NextRequest, schema: ZodType<T>): T {
+export function searchParams<S extends ZodTypeAny>(req: NextRequest, schema: S): output<S> {
   return schema.parse(Object.fromEntries(req.nextUrl.searchParams.entries()));
 }
 
