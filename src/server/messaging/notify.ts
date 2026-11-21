@@ -150,7 +150,7 @@ export async function enqueueCampaign(campaignId: string) {
 
 /** Sends up to `limit` queued messages. Each is claimed first, so concurrent runs never double-send. */
 export async function processQueue(limit = 100) {
-  const result = { sent: 0, failed: 0 };
+  const result = { sent: 0, failed: 0, logged: 0 };
   const callback = process.env.TWILIO_STATUS_CALLBACK === "off" ? null : `${siteBase()}/api/webhooks/twilio`;
   for (let i = 0; i < limit; i++) {
     const { rows } = await q<{ id: number; channel: Channel; destination: string; subject: string; body: string; campaign_id: string | null }>(
@@ -162,8 +162,14 @@ export async function processQueue(limit = 100) {
     if (!n) break;
     try {
       const r = await sendMessage(n.channel, n.destination, { subject: n.subject, text: n.body, html: n.channel === "email" ? textToHtml(n.body) : undefined, statusCallback: n.channel === "email" || !callback?.startsWith("https://") ? null : callback });
-      await q("update notifications set status = 'sent', provider = $2, provider_message_id = $3, sent_at = now(), error = null where id = $1", [n.id, r.provider, r.id]);
-      result.sent++;
+      if (r.provider === "dev-log") {
+        // development without a provider: written to the server log only — never reported as sent
+        await q("update notifications set status = 'skipped', provider = 'dev-log', error = 'Test mode: channel not set up, written to the server log only' where id = $1", [n.id]);
+        result.logged++;
+      } else {
+        await q("update notifications set status = 'sent', provider = $2, provider_message_id = $3, sent_at = now(), error = null where id = $1", [n.id, r.provider, r.id]);
+        result.sent++;
+      }
     } catch (e) {
       await q("update notifications set status = 'failed', error = $2 where id = $1", [n.id, String((e as Error).message).slice(0, 300)]);
       result.failed++;
@@ -175,9 +181,11 @@ export async function processQueue(limit = 100) {
 
 async function finishCampaigns() {
   await q(
-    `update campaigns c set status = case when s.sent = 0 and s.failed > 0 then 'failed' else 'sent' end, sent_at = coalesce(c.sent_at, now()),
-            stats = c.stats || jsonb_build_object('sent', s.sent, 'failed', s.failed, 'delivered', s.delivered)
+    `update campaigns c set status = case when s.sent > 0 then 'sent' else 'failed' end, sent_at = coalesce(c.sent_at, now()),
+            stats = c.stats || jsonb_build_object('sent', s.sent, 'failed', s.failed, 'delivered', s.delivered, 'not_sent_test_mode', s.logged)
+                    || case when s.sent = 0 and s.logged > 0 then jsonb_build_object('error', 'Nothing was delivered — the channel isn''t set up (test mode)') else '{}'::jsonb end
        from (select campaign_id, count(*) filter (where status in ('sent','delivered'))::int as sent, count(*) filter (where status = 'failed')::int as failed,
+                    count(*) filter (where status = 'skipped' and provider = 'dev-log')::int as logged,
                     count(*) filter (where status = 'delivered')::int as delivered, count(*) filter (where status in ('queued','sending'))::int as pending
                from notifications where campaign_id is not null group by campaign_id) s
       where s.campaign_id = c.id and c.status = 'sending' and s.pending = 0`,

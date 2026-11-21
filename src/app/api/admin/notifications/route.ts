@@ -13,7 +13,8 @@ export const GET = api(
       q("select name, last_started_at, last_finished_at, last_result, last_error from job_runs order by name"),
       q(
         `select count(*) filter (where status in ('sent','delivered'))::int as sent, count(*) filter (where status = 'delivered')::int as delivered,
-                count(*) filter (where status = 'failed')::int as failed, count(*) filter (where status in ('queued','sending'))::int as queued
+                count(*) filter (where status = 'failed')::int as failed, count(*) filter (where status in ('queued','sending'))::int as queued,
+                count(*) filter (where status = 'skipped' and provider = 'dev-log')::int as test_mode
            from notifications where created_at > now() - interval '30 days'`,
       ),
       q("select id, name, channel, kind, is_active from notification_templates order by kind, name"),

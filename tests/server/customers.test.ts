@@ -94,15 +94,18 @@ describe("claiming an order and campaigns", () => {
     expect((await enqueueCampaign(camp)).queued).toBe(1);
     expect((await enqueueCampaign(camp)).queued).toBe(0); // already sending — never twice
     const sent = await processQueue(10);
-    expect(sent).toEqual({ sent: 1, failed: 0 });
+    // no provider configured: written to the log, never counted as sent
+    expect(sent).toEqual({ sent: 0, failed: 0, logged: 1 });
     const n = (await db.query<{ body: string; destination: string; status: string; provider: string }>("select body, destination, status, provider from notifications where campaign_id = $1", [camp])).rows;
     expect(n).toHaveLength(1);
     expect(n[0].destination).toBe("9845012345");
     expect(n[0].body).toMatch(/^Hi Asha, you have \d+ points at NEELARYAN Café\.\nOpt out: .*\/unsubscribe\//);
     expect(n[0].provider).toBe("dev-log");
-    const c = (await db.query<{ status: string; stats: { sent: number } }>("select status, stats from campaigns where id = $1", [camp])).rows[0];
-    expect(c.status).toBe("sent");
-    expect(c.stats.sent).toBe(1);
+    expect(n[0].status).toBe("skipped");
+    const c = (await db.query<{ status: string; stats: { sent: number; error: string } }>("select status, stats from campaigns where id = $1", [camp])).rows[0];
+    expect(c.status).toBe("failed");
+    expect(c.stats.sent).toBe(0);
+    expect(c.stats.error).toMatch(/isn't set up/);
   });
 
   it("refuses to send in production when the channel isn't configured", async () => {
