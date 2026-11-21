@@ -64,7 +64,7 @@ export function InventoryPage() {
         description="Ingredients and packaged goods. Stock goes down automatically as orders are confirmed, using each dish's recipe."
         actions={
           <>
-            <a href="/api/admin/reports/inventory?format=csv">
+            <a href="/api/admin/reports/inventory?format=csv" download>
               <Button variant="secondary" icon={<Download size={15} />}>
                 Stock report
               </Button>

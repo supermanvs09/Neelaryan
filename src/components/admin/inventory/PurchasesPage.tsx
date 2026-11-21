@@ -163,7 +163,7 @@ function PurchaseForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<ClientApiError | null>(null);
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   // suggest the supplier's usual items first

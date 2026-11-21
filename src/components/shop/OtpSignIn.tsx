@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { useAccount } from "@/lib/shop/account";
@@ -198,7 +199,7 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
             Join rewards
           </ShopButton>
           <p className="text-[12px] text-muted">
-            By joining you agree to our <a href="/legal/terms" className="underline">terms and privacy policy</a>.
+            By joining you agree to our <Link href="/legal/terms" className="underline">terms and privacy policy</Link>.
           </p>
         </form>
       )}

@@ -260,7 +260,7 @@ export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; 
                 Remove photo
               </button>
             )}
-            <p className="mt-1.5 text-[12px] text-muted">Without a photo the menu shows the item's illustration.</p>
+            <p className="mt-1.5 text-[12px] text-muted">Without a photo the menu shows the item&apos;s illustration.</p>
           </div>
         </div>
       )}
@@ -296,7 +296,7 @@ export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; 
       {tab === "addons" && (
         <div className="space-y-3">
           <p className="text-[13.5px] text-muted">
-            Tick the groups this item offers. Mark options as <b>included</b> when they're part of the dish — they show as “Included” and removing them never lowers the price.
+            Tick the groups this item offers. Mark options as <b>included</b> when they&apos;re part of the dish — they show as “Included” and removing them never lowers the price.
           </p>
           {groups.map((g) => {
             const on = f.group_ids.includes(g.id);
