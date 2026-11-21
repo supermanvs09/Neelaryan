@@ -70,7 +70,7 @@ function Menu({ menu }: { menu: ShopMenu }) {
               </button>
             )}
           </div>
-          <button type="button" aria-pressed={diet === "veg"} onClick={() => setDiet(diet === "veg" ? "all" : "veg")} className={clsx("flex h-11 shrink-0 items-center gap-2 rounded-lg border px-4 text-[14px] font-semibold", diet === "veg" ? "border-veg bg-veg/10 text-veg" : "border-line bg-surface")}>
+          <button type="button" aria-pressed={diet === "veg"} onClick={() => setDiet(diet === "veg" ? "all" : "veg")} className={clsx("flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-[14px] font-semibold", diet === "veg" ? "border-veg bg-veg/10 text-veg" : "border-line bg-surface")}>
             <span className="grid h-[14px] w-[14px] place-items-center rounded-[3px] border-[1.5px] border-veg">
               <span className="h-[6px] w-[6px] rounded-full bg-veg" />
             </span>
@@ -88,7 +88,7 @@ function Menu({ menu }: { menu: ShopMenu }) {
                 document.getElementById(c.slug)?.scrollIntoView({ block: "start", behavior: "smooth" });
                 history.replaceState(null, "", `#${c.slug}`);
               }}
-              className={clsx("h-9 shrink-0 rounded-lg px-3.5 text-[13.5px] font-semibold leading-9 transition-colors", active === c.slug ? "bg-primary text-primary-fg" : "bg-surface text-fg hover:bg-surface-2")}
+              className={clsx("h-9 shrink-0 rounded-full border px-4 text-[13.5px] font-semibold leading-[34px] transition-colors", active === c.slug ? "border-primary bg-primary text-primary-fg" : "border-line bg-surface text-fg hover:border-accent")}
             >
               {c.name}
             </a>
@@ -97,14 +97,14 @@ function Menu({ menu }: { menu: ShopMenu }) {
       </div>
 
       {(eta !== null || live.length > 0) && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
           {eta !== null && (
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-[13.5px] font-semibold">
+            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] font-semibold">
               <Clock size={15} className="text-primary" aria-hidden /> {t(eta.busy ? "eta.busy" : "eta.quiet", { min: eta.minutes })}
             </span>
           )}
           {live.slice(0, 3).map((o) => (
-            <span key={o.id} className="inline-flex items-center gap-1.5 rounded-lg bg-success-soft px-3 py-1.5 text-[13.5px] font-semibold text-success">
+            <span key={o.id} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-accent/40 bg-accent-soft px-3 py-1.5 text-[13px] font-semibold text-accent-text">
               <Tag size={15} aria-hidden /> {o.title} · {t("menu.off", { pct: o.percent_off })}
               {o.menu_item_ids.length === 0 && ` · ${t("offers.whole")}`}
               {endsLabel(o) && <span className="font-normal"> · {t("offers.until", { time: endsLabel(o)! })}</span>}
@@ -121,8 +121,8 @@ function Menu({ menu }: { menu: ShopMenu }) {
         </div>
       ) : (
         sections.map(({ c, items }) => (
-          <section key={c.id} id={c.slug} aria-labelledby={`h-${c.slug}`} className="scroll-mt-[150px] pt-6 md:scroll-mt-[160px]">
-            <h2 id={`h-${c.slug}`} className="text-[21px] font-bold">
+          <section key={c.id} id={c.slug} aria-labelledby={`h-${c.slug}`} className="scroll-mt-[150px] pt-8 md:scroll-mt-[160px]">
+            <h2 id={`h-${c.slug}`} className="section-title">
               {c.name}
             </h2>
             {c.description && <p className="mt-0.5 text-[14px] text-muted">{c.description}</p>}

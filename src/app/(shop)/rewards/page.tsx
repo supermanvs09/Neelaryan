@@ -9,6 +9,7 @@ import { useAccount, type Account } from "@/lib/shop/account";
 import { useMenu } from "@/lib/shop/menu";
 import { clsx } from "@/lib/clsx";
 import { useT } from "@/lib/shop/i18n";
+import { Logo } from "@/components/brand/Logo";
 
 interface Catalogue {
   enabled: boolean;
@@ -69,34 +70,38 @@ export default function RewardsPage() {
 
   return (
     <div className="mx-auto max-w-[860px] space-y-6">
-      <h1 className="text-[26px] font-bold">{t("rw.title")}</h1>
+      <h1 className="font-display text-[30px] font-semibold">{t("rw.title")}</h1>
 
       {account ? (
-        <section className="grid gap-4 rounded-xl border border-line bg-surface p-5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
-          <div>
-            <p className="text-[14px] text-muted">{t("rw.points")}</p>
-            <p className="num text-[26px] font-bold">{balance.toLocaleString("en-IN")}</p>
-            <p className="mt-1 text-[14px] text-muted">
+        <section className="on-navy relative grid gap-4 overflow-hidden rounded-3xl bg-brand-navy p-6 text-[#FAF6EC] shadow-lift md:grid-cols-[1fr_auto] md:items-center md:p-8">
+          <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border border-[#E2BF7A]/25" aria-hidden />
+          <div className="relative">
+            <Logo className="mb-4 w-[120px]" />
+            <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#E2BF7A]">{t("rw.points")}</p>
+            <p className="num font-display text-[44px] font-semibold leading-none text-[#E2BF7A]">{balance.toLocaleString("en-IN")}</p>
+            <p className="mt-2 text-[14px] text-[#FAF6EC]/80">
               {t("rw.worth", { value: rupee(account.points.value) })}
               {account.points.expiring && (
-                <span className="text-warning">
+                <span className="text-[#E2BF7A]">
                   {" "}
                   · {t("rw.expire", { points: account.points.expiring.points, date: date(account.points.expiring.expires_at) })}
                 </span>
               )}
             </p>
           </div>
-          <p className="max-w-xs text-[13.5px] text-muted">
+          <p className="relative max-w-xs text-[13.5px] text-[#FAF6EC]/75">
             Earn {account.loyalty.points_per_100} points per ₹100 on completed orders{account.loyalty.min_order_amount > 0 ? ` over ${rupee(account.loyalty.min_order_amount)}` : ""}. Use them for rewards below, or at checkout from {account.loyalty.min_redeem_points} points.
           </p>
         </section>
       ) : (
-        <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
-          <h2 className="text-[20px] font-bold">{t("rw.join")}</h2>
-          <p className="mt-1 max-w-lg text-[14.5px] text-muted">
-            {t("rw.joinHint", { points: cat.points_per_100 ?? loyalty?.points_per_100 ?? 0 })}
-          </p>
-          <div className="mt-4 max-w-md">
+        <section className="overflow-hidden rounded-3xl border border-line bg-surface shadow-lift">
+          <div className="on-navy relative overflow-hidden bg-brand-navy px-6 py-7 text-[#FAF6EC] md:px-8">
+            <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full border border-[#E2BF7A]/25" aria-hidden />
+            <Logo className="relative mb-4 w-[120px]" />
+            <h2 className="relative font-display text-[26px] font-semibold leading-tight">{t("rw.join")}</h2>
+            <p className="relative mt-1.5 max-w-lg text-[14.5px] text-[#FAF6EC]/80">{t("rw.joinHint", { points: cat.points_per_100 ?? loyalty?.points_per_100 ?? 0 })}</p>
+          </div>
+          <div className="max-w-md px-6 py-6 md:px-8">
             <OtpSignIn onDone={({ isNew }) => toast(isNew ? "Welcome to rewards!" : "Signed in")} />
           </div>
         </section>
@@ -115,7 +120,7 @@ export default function RewardsPage() {
 
       {open.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[18px] font-bold">{t("rw.ready")}</h2>
+          <h2 className="section-title mb-3">{t("rw.ready")}</h2>
           <ul className="space-y-2">
             {open.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
@@ -134,7 +139,7 @@ export default function RewardsPage() {
       )}
 
       <section>
-        <h2 className="mb-2 text-[18px] font-bold">{t("rw.catalogue")}</h2>
+        <h2 className="section-title mb-3">{t("rw.catalogue")}</h2>
         {!cat.rewards.length ? (
           <p className="rounded-xl border border-line bg-surface p-5 text-muted">New rewards are on the way.</p>
         ) : (
@@ -143,7 +148,7 @@ export default function RewardsPage() {
               const short = Math.max(0, r.points_cost - balance);
               const out = r.left === 0;
               return (
-                <li key={r.id} className="flex flex-col rounded-xl border border-line bg-surface p-4">
+                <li key={r.id} className="flex flex-col rounded-2xl border border-line bg-surface p-5 shadow-card">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-bold">{r.name}</p>
                     <span className="num shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 text-[13px] font-bold text-accent-text">{r.points_cost.toLocaleString("en-IN")} pts</span>
@@ -181,7 +186,7 @@ export default function RewardsPage() {
 
       {account && account.history.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[18px] font-bold">{t("rw.history")}</h2>
+          <h2 className="section-title mb-3">{t("rw.history")}</h2>
           <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
             {account.history.map((h, i) => (
               <li key={i} className="flex items-center justify-between gap-3 px-4 py-3 text-[14px]">

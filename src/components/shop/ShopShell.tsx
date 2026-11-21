@@ -59,7 +59,7 @@ function Shell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[90] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-fg">
+      <a href="#main" className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-3 focus-visible:top-3 focus-visible:z-[90] focus-visible:rounded-full focus-visible:bg-primary focus-visible:px-4 focus-visible:py-2 focus-visible:text-primary-fg">
         Skip to content
       </a>
       <Header hydrated={hydrated} />
@@ -106,7 +106,7 @@ function ContextChip({ hydrated }: { hydrated: boolean }) {
   const open = useContextSheet((s) => s.set);
   if (!hydrated) return null;
   return (
-    <button type="button" onClick={() => open(true)} className="inline-flex h-10 max-w-[38vw] items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-[13.5px] font-semibold hover:border-line-strong sm:max-w-none">
+    <button type="button" onClick={() => open(true)} className="inline-flex h-10 max-w-[42vw] items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-[13.5px] font-semibold text-fg hover:border-accent sm:max-w-none">
       {mode === "dine_in" && table ? (
         <>
           <QrCode size={15} aria-hidden /> <span className="truncate">{t("ctx.table", { table: table.label })}</span>
@@ -116,7 +116,9 @@ function ContextChip({ hydrated }: { hydrated: boolean }) {
           <ShoppingBag size={15} aria-hidden /> <span className="truncate">{t("ctx.takeaway")}</span>
         </>
       ) : (
-        <span className="truncate">{t("ctx.choose")}</span>
+        <>
+          <UtensilsCrossed size={15} aria-hidden /> <span className="truncate">{t("ctx.pick")}</span>
+        </>
       )}
     </button>
   );
@@ -151,11 +153,13 @@ function Header({ hydrated }: { hydrated: boolean }) {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <ContextChip hydrated={hydrated} />
-          <LanguageSwitch compact />
+          <div className="hidden sm:block">
+            <LanguageSwitch compact />
+          </div>
           <div className="hidden lg:block">
             <ThemeSwitch compact />
           </div>
-          <button type="button" onClick={() => openCart(true)} className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-fg hover:bg-primary-hover" aria-label={`${t("cart.title")}, ${count}`}>
+          <button type="button" onClick={() => openCart(true)} className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-fg shadow-card hover:bg-primary-hover" aria-label={`${t("cart.title")}, ${count}`}>
             <ShoppingBag size={19} />
             {count > 0 && <span className="num absolute -right-1 -top-1 grid h-[22px] min-w-[22px] place-items-center rounded-full bg-accent px-1 text-[12px] font-bold text-accent-fg ring-2 ring-bg">{count}</span>}
           </button>
@@ -187,8 +191,8 @@ function BottomBar({ hydrated }: { hydrated: boolean }) {
     <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
       {count > 0 && (
         <div className="px-3 pb-2">
-          <button type="button" onClick={() => openCart(true)} className="flex h-14 w-full items-center gap-3 rounded-xl bg-primary px-4 text-left text-primary-fg shadow-lift">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-accent-fg">
+          <button type="button" onClick={() => openCart(true)} className="flex h-14 w-full items-center gap-3 rounded-full bg-primary pl-2.5 pr-5 text-left text-primary-fg shadow-lift">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-accent-fg">
               <ShoppingBag size={17} />
             </span>
             <span className="flex-1">
@@ -203,15 +207,16 @@ function BottomBar({ hydrated }: { hydrated: boolean }) {
           </button>
         </div>
       )}
-      <nav aria-label="Main" className="border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Main" className="border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <ul className="grid grid-cols-5">
           {NAV.map((n) => {
             const on = active(pathname, n.href);
             const Icon = n.icon;
             return (
               <li key={n.href}>
-                <Link href={n.href} aria-current={on ? "page" : undefined} className={clsx("flex h-[58px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold", on ? "text-primary" : "text-muted")}>
-                  <Icon size={21} strokeWidth={on ? 2.3 : 1.8} aria-hidden />
+                <Link href={n.href} aria-current={on ? "page" : undefined} className={clsx("relative flex h-[60px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold", on ? "text-primary" : "text-muted")}>
+                  {on && <span className="absolute top-0 h-[3px] w-8 rounded-b-full bg-accent" aria-hidden />}
+                  <Icon size={21} strokeWidth={on ? 2.2 : 1.7} aria-hidden />
                   {t(n.key)}
                 </Link>
               </li>

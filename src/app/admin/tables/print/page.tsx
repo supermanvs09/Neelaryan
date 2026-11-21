@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Logo } from "@/components/brand/Logo";
 import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { requireUser } from "@/server/auth/current";
@@ -18,11 +19,11 @@ export default async function PrintQrPage() {
   const cards = await Promise.all(
     tables.map(async (t) => ({
       ...t,
-      svg: await QRCode.toString(tableUrl(base, t.qr_token), { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#23324C", light: "#FFFFFF" } }),
+      svg: await QRCode.toString(tableUrl(base, t.qr_token), { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0B2A55", light: "#FFFFFF" } }),
     })),
   );
   return (
-    <div className="bg-[#fff] text-[#23324C]">
+    <div className="bg-[#fff] text-[#0B2A55]" style={{ ["--brand-ink" as string]: "11 42 85", ["--brand-gold" as string]: "194 149 69" }}>
       <style>{`@page{size:A4;margin:10mm}@media print{.no-print{display:none!important}header,aside{display:none!important}main{padding:0!important;max-width:none!important}body{background:#fff!important}}`}</style>
       <div className="no-print mb-4 flex items-center justify-between gap-3">
         <p className="text-[14px] text-muted">
@@ -32,9 +33,9 @@ export default async function PrintQrPage() {
       </div>
       <div className="grid grid-cols-2 gap-[8mm]">
         {cards.map((t) => (
-          <div key={t.id} className="flex break-inside-avoid flex-col items-center rounded-[4mm] border-2 border-[#B58A45] p-[6mm] text-center" style={{ height: "88mm" }}>
-            <p className="text-[20px] font-bold leading-none">{business.name}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7E5E28]">Scan to order</p>
+          <div key={t.id} className="flex break-inside-avoid flex-col items-center rounded-[4mm] border-2 border-[#C29545] p-[6mm] text-center" style={{ height: "88mm" }}>
+            <Logo className="w-[52mm]" title={business.name} />
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.3em] text-[#805B1C]">Scan to order</p>
             <div className="my-[3mm] h-[46mm] w-[46mm]" dangerouslySetInnerHTML={{ __html: t.svg }} />
             <p className="text-[12px]">Table</p>
             <p className="num text-[30px] font-bold leading-none">{t.label}</p>

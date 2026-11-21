@@ -89,7 +89,7 @@ export function withOptOut(body: string, ch: Channel, url: string) {
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 export const textToHtml = (s: string) =>
-  `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.6;color:#23324C;max-width:560px">${escapeHtml(s)
+  `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.6;color:#0B2A55;max-width:560px">${escapeHtml(s)
     .split(/\n{2,}/)
     .map((p) => `<p>${p.replace(/\n/g, "<br>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#2F6AA8">$1</a>')}</p>`)
     .join("")}</div>`;

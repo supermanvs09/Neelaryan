@@ -33,21 +33,21 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
         {rupee(deal ? deal.price : fromPrice(item))}
       </span>
       {deal && <span className="num text-[13px] text-muted line-through">{rupee(deal.was)}</span>}
-      {deal && <span className="rounded bg-success-soft px-1.5 py-0.5 text-[11.5px] font-bold text-success">{t("menu.off", { pct: deal.offer.percent_off })}</span>}
+      {deal && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-bold text-accent-text">{t("menu.off", { pct: deal.offer.percent_off })}</span>}
       {fewLeft && !soldOut && <span className="text-[12px] font-semibold text-warning">{t("menu.left", { n: item.stock_left! })}</span>}
     </span>
   );
   const button = soldOut ? (
-    <span className="rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-muted">{t("menu.soldOut")}</span>
+    <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-muted">{t("menu.soldOut")}</span>
   ) : (
-    <button type="button" onClick={quickAdd} className="inline-flex h-9 items-center gap-1 rounded-lg border border-primary px-3.5 text-[13.5px] font-semibold text-primary hover:bg-primary hover:text-primary-fg" aria-label={`${configurable ? "Choose options for" : "Add"} ${item.name}`}>
+    <button type="button" onClick={quickAdd} className="inline-flex h-9 items-center gap-1 rounded-full border border-primary px-4 text-[13.5px] font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-fg" aria-label={`${configurable ? "Choose options for" : "Add"} ${item.name}`}>
       <Plus size={15} aria-hidden /> {isBuilder(item) ? t("menu.build") : t("menu.add")}
     </button>
   );
 
   if (layout === "tile") {
     return (
-      <article className={clsx("group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
+      <article className={clsx("group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-colors hover:border-accent", soldOut && "opacity-70")}>
         <button type="button" onClick={() => open(item)} className="block text-left" aria-label={`${item.name}, ${rupee(fromPrice(item))}`}>
           <div className="aspect-[16/9] bg-surface-2">
             <ItemVisual item={item} iconSize={36} />
@@ -68,9 +68,9 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
     );
   }
   return (
-    <article className={clsx("flex gap-3 rounded-xl border border-line bg-surface p-3 transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
+    <article className={clsx("flex gap-3 rounded-2xl border border-line bg-surface p-3 shadow-card transition-colors hover:border-accent", soldOut && "opacity-70")}>
       <button type="button" onClick={() => open(item)} className="flex min-w-0 flex-1 gap-3 text-left" aria-label={`${item.name}, ${rupee(fromPrice(item))}${soldOut ? ", sold out" : ""}`}>
-        <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-lg bg-surface-2">
+        <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-xl bg-surface-2">
           <ItemVisual item={item} />
         </div>
         <div className="min-w-0 flex-1">

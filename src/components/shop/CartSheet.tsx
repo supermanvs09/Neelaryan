@@ -24,6 +24,7 @@ export function CartSheet() {
   const tr = useT();
   const { lines, subtotal, count, blocked } = priceCart(menu, cart);
   const t = totalsFor(menu, subtotal, 0);
+  const savings = lines.reduce((s, l) => s + (l.ok ? l.saving : 0), 0);
 
   return (
     <Sheet
@@ -35,6 +36,12 @@ export function CartSheet() {
         count > 0 && (
           <div>
             <dl className="mb-3 space-y-1 text-[14px]">
+              {savings > 0 && (
+                <div className="flex justify-between font-semibold text-success">
+                  <dt>{tr("co.offerSavings")}</dt>
+                  <dd className="num">−{rupee(savings)}</dd>
+                </div>
+              )}
               <div className="flex justify-between text-muted">
                 <dt>{tr("cart.itemsTotal")}</dt>
                 <dd className="num">{rupee(t.subtotal)}</dd>
@@ -57,7 +64,7 @@ export function CartSheet() {
             {blocked ? (
               <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13.5px] text-danger">{tr("cart.unavailable")}</p>
             ) : (
-              <Link href="/checkout" onClick={() => setOpen(false)} className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-primary text-[16px] font-semibold text-primary-fg hover:bg-primary-hover">
+              <Link href="/checkout" onClick={() => setOpen(false)} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-semibold text-primary-fg hover:bg-primary-hover">
                 {mode === "dine_in" && table ? `${tr("cart.checkout")} · ${tr("ctx.table", { table: table.label })}` : tr("cart.checkout")}
               </Link>
             )}
@@ -70,7 +77,7 @@ export function CartSheet() {
           <ShoppingBag size={28} className="mx-auto text-muted" aria-hidden />
           <p className="mt-3 text-[16px] font-semibold">{tr("cart.empty")}</p>
           <p className="mt-1 text-[14px] text-muted">{tr("cart.emptyHint")}</p>
-          <Link href="/menu" onClick={() => setOpen(false)} className="mt-5 inline-flex min-h-[48px] items-center rounded-lg border border-line px-6 font-semibold hover:border-line-strong">
+          <Link href="/menu" onClick={() => setOpen(false)} className="mt-5 inline-flex min-h-[48px] items-center rounded-full border border-line px-6 font-semibold hover:border-accent">
             {tr("cart.browse")}
           </Link>
         </div>
@@ -80,13 +87,16 @@ export function CartSheet() {
             const item = menu ? itemById(menu, l.line.item_id) : undefined;
             return (
               <li key={l.line.key} className="flex gap-3 px-5 py-4">
-                <button type="button" className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface-2" onClick={() => item && l.ok && (setOpen(false), openItem(item, l.line))} aria-label={`Edit ${l.name}`} disabled={!item || !l.ok}>
+                <button type="button" className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-2" onClick={() => item && l.ok && (setOpen(false), openItem(item, l.line))} aria-label={`Edit ${l.name}`} disabled={!item || !l.ok}>
                   {item && <ItemVisual item={item} iconSize={22} />}
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold leading-snug">{l.name}</p>
-                    <p className="num shrink-0 font-semibold">{l.ok ? rupee(l.total) : ""}</p>
+                    <p className="num shrink-0 text-right font-semibold">
+                      {l.ok ? rupee(l.total) : ""}
+                      {l.ok && l.saving > 0 && <span className="block text-[12.5px] font-normal text-muted line-through">{rupee(l.total + l.saving)}</span>}
+                    </p>
                   </div>
                   {l.detail && <p className="mt-0.5 text-[13px] text-muted">{l.detail}</p>}
                   {l.line.notes && <p className="mt-0.5 text-[13px] italic text-muted">“{l.line.notes}”</p>}

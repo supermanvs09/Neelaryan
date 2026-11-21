@@ -96,7 +96,7 @@ function Inner() {
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-[20px] font-bold">{t("trk.missing")}</p>
         <p className="mt-1 text-muted">{t("trk.missingHint")}</p>
-        <Link href="/orders" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
+        <Link href="/orders" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
           {t("ord.back")}
         </Link>
       </div>
@@ -164,7 +164,7 @@ function Tracking({ order, token, placed, reload }: { order: PublicOrder; token:
         <p className="text-[13px] font-semibold text-muted">
           {t("trk.order", { n: order.number })} · {order.type === "dine_in" ? t("ctx.table", { table: order.table_label ?? "" }) : t("ctx.takeaway")} · {time(order.created_at)}
         </p>
-        <h1 className="mt-1 text-[24px] font-bold leading-tight md:text-[28px]">{held ? t("trk.h.scheduled", { time: time(order.scheduled_for!) }) : t(headlineKey(order))}</h1>
+        <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight md:text-[32px]">{held ? t("trk.h.scheduled", { time: time(order.scheduled_for!) }) : t(headlineKey(order))}</h1>
         {held && <p className="mt-1 text-[14px] text-muted">{t("trk.scheduledHint")}</p>}
         {stopped && order.cancel_reason && <p className="mt-1 text-[14.5px]">{order.cancel_reason}</p>}
         {!stopped && (
@@ -363,7 +363,7 @@ function UpiPanel({ order, headers, vpa, payee, onClaimed }: { order: PublicOrde
               <div className="aspect-square" />
             )}</div>
             <div className="space-y-3">
-              <a href={link} className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-primary px-5 font-semibold text-primary-fg hover:bg-primary-hover">
+              <a href={link} className="flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-fg hover:bg-primary-hover">
                 {t("upi.open")}
               </a>
               <p className="text-center text-[12.5px] text-muted">{t("upi.to", { payee, vpa })}</p>
@@ -408,7 +408,7 @@ function Feedback({ order, headers, onSaved }: { order: PublicOrder; headers: Re
       <div className="mt-2 flex gap-1" role="radiogroup" aria-label={t("fb.title")}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={t("fb.stars", { n })} disabled={!editing} onClick={() => setRating(n)} className="grid h-11 w-11 place-items-center rounded-lg hover:bg-surface-2 disabled:hover:bg-transparent">
-            <Star size={26} className={n <= rating ? "fill-[#B58A45] text-[#B58A45]" : "text-line-strong"} aria-hidden />
+            <Star size={26} className={n <= rating ? "fill-[#C29545] text-[#C29545]" : "text-line-strong"} aria-hidden />
           </button>
         ))}
       </div>

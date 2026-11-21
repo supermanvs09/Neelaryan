@@ -3,123 +3,134 @@
 @tailwind utilities;
 
 /*
- * Design tokens — derived from the NEELARYAN palette:
- *   Champagne #DBC7AC · Ivory #F4EEE2 · French Blue #7A94AC · Gold #B58A45 · Navy #23324C
+ * Design tokens — taken from the NEELARYAN logo:
+ *   Logo navy #0B2A55 (deep #061A38) · Logo gold #C29545 (light #E2BF7A) · Marble ivory #FAF6EC
  * Values are RGB channels so Tailwind opacity modifiers work.
- * French Blue itself is too light for white text (≈3:1), so interactive
- * elements use a deeper French Blue (#45607B, 6.3:1 with white).
+ * Light: navy ink on warm ivory, navy actions, gold for brand highlights.
+ * Dark: deep logo navy surfaces, ivory text, gold actions.
  */
 @layer base {
   :root {
     color-scheme: light;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-    --bg: 244 238 226;          /* Ivory */
-    --surface: 251 248 242;     /* lifted ivory: cards, tables, inputs */
-    --surface-2: 239 229 214;   /* Champagne, light: subtle panels, table heads */
-    --line: 222 208 186;        /* Champagne border */
-    --line-strong: 196 176 147;
-    --fg: 35 50 76;             /* Navy */
-    --muted: 92 104 124;        /* 5.2:1 on ivory */
-    --primary: 69 96 123;       /* deep French Blue */
-    --primary-hover: 57 81 106;
+    --brand-ink: 11 42 85;      /* logo navy */
+    --brand-gold: 194 149 69;   /* logo gold */
+    --brand-navy: 6 26 56;      /* deep navy: sidebar, hero bands (both themes) */
+
+    --bg: 250 246 236;          /* marble ivory */
+    --surface: 255 253 248;     /* cards, tables, inputs */
+    --surface-2: 244 237 222;   /* champagne: panels, table heads */
+    --line: 232 221 200;
+    --line-strong: 208 191 160;
+    --fg: 12 30 58;             /* navy ink, 14:1 on ivory */
+    --muted: 86 98 120;         /* 5.6:1 on ivory */
+    --primary: 11 42 85;        /* logo navy, 13:1 with white */
+    --primary-hover: 7 31 66;
     --primary-fg: 255 255 255;
-    --primary-soft: 222 230 238;/* French Blue tint: selected nav, focus */
-    --accent: 181 138 69;       /* Gold */
-    --accent-fg: 35 50 76;
-    --accent-soft: 241 230 210;
-    --accent-text: 126 94 40;   /* gold readable on ivory (5.1:1) */
-    --chart-1: 47 106 168;      /* French Blue, chart-validated */
-    --chart-2: 168 120 44;      /* Gold, chart-validated */
+    --primary-soft: 228 234 243;
+    --accent: 194 149 69;       /* logo gold */
+    --accent-fg: 11 30 58;
+    --accent-soft: 247 237 215;
+    --accent-text: 128 91 28;   /* gold readable on ivory, 5.4:1 */
+    --chart-1: 30 74 140;       /* logo navy, lifted for charts */
+    --chart-2: 176 128 48;      /* logo gold, chart-validated */
     --danger: 166 54 34;
     --danger-soft: 248 226 220;
-    --success: 47 122 75;
-    --success-soft: 223 240 229;
-    --warning: 154 107 18;
-    --warning-soft: 247 236 208;
-    --shadow: 35 50 76;
+    --success: 39 117 72;
+    --success-soft: 222 240 229;
+    --warning: 150 102 14;
+    --warning-soft: 248 236 206;
+    --shadow: 11 30 58;
 
     /* legacy names used by the customer app */
-    --white: 255 255 255;
-    --navy-950: 18 26 41;
-    --navy-900: 35 50 76;
-    --navy-800: 35 50 76;
-    --navy-700: 46 64 95;
-    --navy-600: 59 80 114;
-    --navy-500: 77 99 133;
-    --gold-700: 126 94 40;
-    --gold-600: 154 115 55;
-    --gold-500: 181 138 69;
-    --gold-400: 201 164 105;
-    --gold-300: 221 193 151;
-    --gold-200: 238 224 198;
-    --ivory: 244 238 226;
-    --cream: 239 229 214;
-    --sand: 219 199 172;
-    --sand-200: 239 229 214;
-    --sand-400: 214 197 170;
-    --sand-600: 168 145 111;
-    --ink: 35 50 76;
-    --ink-soft: 61 74 96;
-    --ink-muted: 92 104 124;
+    --white: 255 253 248;
+    --navy-950: 6 26 56;
+    --navy-900: 11 42 85;
+    --navy-800: 11 42 85;
+    --navy-700: 22 56 106;
+    --navy-600: 37 72 124;
+    --navy-500: 62 96 148;
+    --gold-700: 128 91 28;
+    --gold-600: 160 118 46;
+    --gold-500: 194 149 69;
+    --gold-400: 210 170 96;
+    --gold-300: 226 191 122;
+    --gold-200: 243 228 196;
+    --ivory: 250 246 236;
+    --cream: 244 237 222;
+    --sand: 226 210 180;
+    --sand-200: 244 237 222;
+    --sand-400: 216 198 166;
+    --sand-600: 164 140 100;
+    --ink: 12 30 58;
+    --ink-soft: 44 60 88;
+    --ink-muted: 86 98 120;
     --veg: 31 128 58;
     --nonveg: 163 54 31;
     --egg: 168 104 6;
   }
 
-  /* Dark: Navy foundation, Ivory text, lighter French Blue for interaction, Gold for highlights */
   :root.dark {
     color-scheme: dark;
-    --bg: 17 25 40;
-    --surface: 26 37 57;
-    --surface-2: 33 46 70;
-    --line: 47 63 92;
-    --line-strong: 70 89 122;
-    --fg: 244 238 226;
-    --muted: 168 179 196;
-    --primary: 143 169 194;
-    --primary-hover: 166 189 210;
-    --primary-fg: 17 25 40;
-    --primary-soft: 41 59 88;
-    --accent: 201 164 105;
-    --accent-fg: 17 25 40;
-    --accent-soft: 64 54 38;
-    --accent-text: 221 193 151;
-    --chart-1: 91 147 211;
-    --chart-2: 184 138 46;
-    --danger: 232 128 104;
-    --danger-soft: 68 34 30;
-    --success: 110 192 140;
-    --success-soft: 29 56 43;
-    --warning: 226 180 92;
-    --warning-soft: 62 50 26;
+    --brand-ink: 250 246 236;
+    --brand-gold: 214 176 106;
+    --bg: 5 18 38;
+    --surface: 10 31 61;
+    --surface-2: 15 41 78;
+    --line: 28 56 96;
+    --line-strong: 48 80 126;
+    --fg: 248 243 231;
+    --muted: 170 182 202;
+    --primary: 214 176 106;     /* gold actions on navy */
+    --primary-hover: 228 194 130;
+    --primary-fg: 6 22 46;
+    --primary-soft: 30 52 86;
+    --accent: 214 176 106;
+    --accent-fg: 6 22 46;
+    --accent-soft: 52 46 34;
+    --accent-text: 226 194 132;
+    --chart-1: 110 155 220;
+    --chart-2: 214 170 86;
+    --danger: 236 134 110;
+    --danger-soft: 66 30 28;
+    --success: 112 196 144;
+    --success-soft: 22 54 44;
+    --warning: 228 184 96;
+    --warning-soft: 58 46 22;
     --shadow: 0 0 0;
 
-    --white: 26 37 57;
-    --navy-950: 8 12 22;
-    --navy-900: 244 238 226;
-    --navy-800: 143 169 194;
-    --navy-700: 166 189 210;
-    --navy-600: 186 203 220;
-    --navy-500: 205 216 228;
-    --gold-700: 221 193 151;
-    --gold-600: 211 178 125;
-    --gold-500: 201 164 105;
-    --gold-400: 181 138 69;
-    --gold-300: 221 193 151;
-    --gold-200: 64 54 38;
-    --ivory: 17 25 40;
-    --cream: 33 46 70;
-    --sand: 47 63 92;
-    --sand-200: 33 46 70;
-    --sand-400: 54 71 102;
-    --sand-600: 120 134 156;
-    --ink: 244 238 226;
-    --ink-soft: 214 218 226;
-    --ink-muted: 168 179 196;
-    --veg: 110 192 140;
-    --nonveg: 232 128 104;
-    --egg: 226 180 92;
+    --white: 10 31 61;
+    --navy-950: 2 10 24;
+    --navy-900: 248 243 231;
+    --navy-800: 214 176 106;
+    --navy-700: 228 194 130;
+    --navy-600: 236 208 154;
+    --navy-500: 240 220 180;
+    --gold-700: 226 194 132;
+    --gold-600: 220 184 116;
+    --gold-500: 214 176 106;
+    --gold-400: 194 149 69;
+    --gold-300: 226 194 132;
+    --gold-200: 52 46 34;
+    --ivory: 5 18 38;
+    --cream: 15 41 78;
+    --sand: 28 56 96;
+    --sand-200: 15 41 78;
+    --sand-400: 40 70 112;
+    --sand-600: 120 138 166;
+    --ink: 248 243 231;
+    --ink-soft: 214 220 230;
+    --ink-muted: 170 182 202;
+    --veg: 112 196 144;
+    --nonveg: 236 134 110;
+    --egg: 228 184 96;
+  }
+
+  /* Always-navy brand surfaces (console sidebar, hero bands): ivory ink, gold stays gold. */
+  .on-navy {
+    --brand-ink: 250 246 236;
+    --brand-gold: 214 176 106;
   }
 
   html {
@@ -175,6 +186,10 @@
   }
   .card {
     @apply rounded-xl border border-line bg-surface;
+  }
+  /* serif section headings: the logo's voice, used sparingly for guest-facing titles */
+  .section-title {
+    @apply font-display text-[21px] font-semibold leading-tight text-fg md:text-[24px];
   }
   .eyebrow {
     @apply text-[11px] font-bold uppercase tracking-[0.2em] text-accent-text;

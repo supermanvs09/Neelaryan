@@ -1,16 +1,12 @@
 import { clsx } from "@/lib/clsx";
+import { Logo } from "./Logo";
 
-/** Plain text logo: monogram tile + name. */
-export function Wordmark({ className, name = "NEELARYAN", sub, compact }: { className?: string; name?: string; sub?: string; compact?: boolean }) {
+/** The logo lockup sized for headers, with an optional small caption (e.g. "Staff console"). */
+export function Wordmark({ className, sub, compact }: { className?: string; name?: string; sub?: string; compact?: boolean }) {
   return (
-    <span className={clsx("inline-flex items-center gap-2.5", className)}>
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#23324C] text-[17px] font-bold text-[#F4EEE2] dark:bg-[#B58A45] dark:text-[#23324C]" aria-hidden>
-        N
-      </span>
-      <span className={clsx("leading-tight", compact && "hidden sm:block")}>
-        <span className="block text-[16px] font-bold tracking-[0.06em] text-fg">{name}</span>
-        {sub && <span className="block text-[12px] font-medium text-muted">{sub}</span>}
-      </span>
+    <span className={clsx("inline-flex flex-col items-start", className)}>
+      <Logo className={compact ? "w-[124px] sm:w-[148px]" : "w-[156px]"} />
+      {sub && <span className="-mt-0.5 pl-[5%] text-[11px] font-semibold uppercase tracking-[0.22em] text-muted">{sub}</span>}
     </span>
   );
 }

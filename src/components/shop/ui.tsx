@@ -6,7 +6,12 @@ import { CheckCircle2, AlertCircle, Minus, Plus, X } from "lucide-react";
 import { useEscape, useScrollLock } from "@/lib/hooks";
 import { clsx } from "@/lib/clsx";
 
-export const rupee = (n: number) => `₹${(Math.round(n * 100) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+/** ₹20 for whole rupees, ₹100.80 (never ₹100.8) when there are paise. */
+export const rupee = (n: number) => {
+  const v = Math.round(n * 100) / 100;
+  const paise = Math.round(Math.abs(v) * 100) % 100 !== 0;
+  return `₹${v.toLocaleString("en-IN", { minimumFractionDigits: paise ? 2 : 0, maximumFractionDigits: 2 })}`;
+};
 
 /** Indian food-type mark: green (veg), red-brown triangle (non-veg), amber (egg). */
 export function DietMark({ diet, className }: { diet: "veg" | "egg" | "nonveg"; className?: string }) {
@@ -76,7 +81,7 @@ export function Sheet({ open, onClose, title, children, footer, side = false, wi
       >
         <div className="flex items-center gap-3 border-b border-line px-5 py-3.5">
           {title && (
-            <h2 id={id} className="min-w-0 flex-1 truncate text-[17px] font-bold">
+            <h2 id={id} className="min-w-0 flex-1 truncate font-display text-[20px] font-semibold">
               {title}
             </h2>
           )}
@@ -111,9 +116,9 @@ export function ToastHost() {
     return () => clearTimeout(h);
   }, [t, hide]);
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+9rem)] z-[70] flex justify-center px-4 md:bottom-8" aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+4.75rem)] z-[70] flex justify-center px-4 md:top-24" aria-live="polite">
       {t && (
-          <div key={t.id} className="pointer-events-auto flex max-w-md items-center gap-2 rounded-lg bg-[#1b2740] px-4 py-2.5 text-[14px] font-semibold text-[#fff] shadow-pop">
+          <div key={t.id} className="pointer-events-auto flex max-w-md items-center gap-2 rounded-full border border-[#E2BF7A]/30 bg-[#061A38] px-5 py-2.5 text-[14px] font-semibold text-[#FAF6EC] shadow-pop">
             {t.tone === "ok" ? <CheckCircle2 size={17} className="text-[#8fd3a6]" aria-hidden /> : <AlertCircle size={17} className="text-[#f2c27b]" aria-hidden />}
             {t.text}
           </div>
@@ -133,7 +138,7 @@ export function ShopButton({ children, variant = "primary", className, loading, 
       {...rest}
       disabled={rest.disabled || loading}
       className={clsx(
-        "inline-flex min-h-[46px] items-center justify-center gap-2 rounded-lg px-5 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-55",
+        "inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-55",
         variant === "primary" && "bg-primary text-primary-fg hover:bg-primary-hover",
         variant === "accent" && "bg-accent text-accent-fg hover:opacity-90",
         variant === "secondary" && "border border-line bg-surface text-fg hover:border-line-strong",

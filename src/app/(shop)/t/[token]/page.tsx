@@ -52,7 +52,7 @@ export default function TableEntry() {
           <QrCode size={30} className="mx-auto text-muted" aria-hidden />
           <p className="mt-3 text-[20px] font-bold">{error}</p>
           <p className="mt-1 text-muted">Please ask our team for help, or order takeaway from the menu.</p>
-          <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
+          <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
             See the menu
           </Link>
         </>

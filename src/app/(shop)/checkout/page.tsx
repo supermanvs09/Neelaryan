@@ -100,7 +100,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
       <div className="mx-auto max-w-md py-24 text-center">
         <ShoppingBag size={30} className="mx-auto text-muted" aria-hidden />
         <p className="mt-3 text-[20px] font-bold">{t("co.empty")}</p>
-        <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
+        <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
           {t("cart.browse")}
         </Link>
       </div>
@@ -168,7 +168,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
       <Link href="/menu" className="inline-flex h-10 items-center gap-1.5 pr-3 text-[14px] font-semibold text-muted hover:text-fg">
         <ArrowLeft size={17} aria-hidden /> {t("co.keepBrowsing")}
       </Link>
-      <h1 className="mt-1 text-[26px] font-bold">{t("co.title")}</h1>
+      <h1 className="mt-1 font-display text-[30px] font-semibold">{t("co.title")}</h1>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="space-y-5">
@@ -355,7 +355,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
             <dl className="space-y-1 border-t border-line px-5 py-3 text-[14px]">
               {tot ? (
                 <>
-                  {savings > 0 && <Row k={t("co.offerSavings")} v={`${rupee(savings)}`} accent />}
+                  {savings > 0 && <Row k={t("co.offerSavings")} v={`−${rupee(savings)}`} accent />}
                   <Row k={t("cart.itemsTotal")} v={rupee(tot.subtotal)} />
                   {tot.discount > 0 && <Row k={t("co.discount")} v={`−${rupee(tot.discount)}`} accent />}
                   {tot.service_charge > 0 && <Row k={t("cart.service")} v={rupee(tot.service_charge)} />}

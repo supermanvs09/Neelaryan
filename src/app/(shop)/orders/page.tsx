@@ -59,7 +59,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-[720px]">
-      <h1 className="text-[26px] font-bold">{t("ord.title")}</h1>
+      <h1 className="font-display text-[30px] font-semibold">{t("ord.title")}</h1>
       {loading ? (
         <div className="grid place-items-center py-20 text-muted">
           <Spinner />
@@ -70,7 +70,7 @@ export default function OrdersPage() {
           <p className="mt-3 text-[17px] font-semibold">{t("ord.none")}</p>
           <p className="mt-1 text-muted">{signedIn ? t("ord.noneSigned") : t("ord.noneHint")}</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
+            <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
               {t("home.view")}
             </Link>
             {!signedIn && (

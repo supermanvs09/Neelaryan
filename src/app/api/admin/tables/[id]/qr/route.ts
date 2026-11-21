@@ -12,7 +12,7 @@ export const GET = api(
     const { rows } = await q<{ label: string; qr_token: string }>("select label, qr_token from dining_tables where id = $1", [id]);
     if (!rows[0]) throw notFound("Table");
     const url = tableUrl(siteUrl(ctx.req.nextUrl.origin), rows[0].qr_token);
-    const opts = { errorCorrectionLevel: "M" as const, margin: 2, color: { dark: "#23324C", light: "#FFFFFF" } };
+    const opts = { errorCorrectionLevel: "M" as const, margin: 2, color: { dark: "#0B2A55", light: "#FFFFFF" } };
     const disposition = ctx.req.nextUrl.searchParams.get("download") === "1" ? `attachment; filename="table-${rows[0].label.replace(/\W+/g, "-")}-qr.${format}"` : "inline";
     if (format === "png") {
       const buf = await QRCode.toBuffer(url, { ...opts, width: 1024 });

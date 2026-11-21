@@ -21,7 +21,7 @@ function Inner() {
           return (
             <div className="mx-auto max-w-md py-24 text-center">
               <p className="text-[20px] font-bold">This item isn&apos;t on the menu any more</p>
-              <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
+              <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
                 Back to the menu
               </Link>
             </div>

@@ -27,7 +27,7 @@ interface Data {
 const Stars = ({ n }: { n: number }) => (
   <span className="inline-flex" aria-label={`${n} out of 5`}>
     {[1, 2, 3, 4, 5].map((i) => (
-      <Star key={i} size={14} className={i <= n ? "fill-[#B58A45] text-[#B58A45]" : "text-line-strong"} aria-hidden />
+      <Star key={i} size={14} className={i <= n ? "fill-[#C29545] text-[#C29545]" : "text-line-strong"} aria-hidden />
     ))}
   </span>
 );

@@ -33,7 +33,7 @@ function Inner() {
     );
   return (
     <div className="mx-auto max-w-[620px] space-y-6">
-      <h1 className="text-[26px] font-bold">{t("acc.title")}</h1>
+      <h1 className="font-display text-[30px] font-semibold">{t("acc.title")}</h1>
       {!data ? (
         <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
           <h2 className="text-[18px] font-bold">{t("acc.signInTitle")}</h2>

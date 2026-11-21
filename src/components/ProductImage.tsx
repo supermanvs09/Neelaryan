@@ -42,7 +42,7 @@ export const ProductImage = memo(function ProductImage({
   }
   const Icon = ICONS[kind] ?? UtensilsCrossed;
   return (
-    <div className={clsx("grid h-full w-full place-items-center bg-surface-2 text-muted", className)} role="img" aria-label={name}>
+    <div className={clsx("grid h-full w-full place-items-center bg-accent-soft/70 text-primary/70 ring-1 ring-inset ring-accent/25", className)} role="img" aria-label={name}>
       <Icon size={iconSize} strokeWidth={1.5} aria-hidden />
     </div>
   );

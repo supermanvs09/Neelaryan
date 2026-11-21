@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo, LogoMark } from "@/components/brand/Logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -40,10 +41,10 @@ function NavList({ groups, path, collapsed, onNavigate }: { groups: typeof NAV_G
     ref.current?.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
   }, [path]);
   return (
-    <nav ref={ref} aria-label="Console" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3">
+    <nav ref={ref} aria-label="Console" className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-b border-white/10 px-2.5 py-3">
       {groups.map((g) => (
         <div key={g.label} className="mb-3">
-          {!collapsed && <p className="px-2.5 pb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ivory/45 dark:text-muted">{g.label}</p>}
+          {!collapsed && <p className="px-2.5 pb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#E2BF7A]/60">{g.label}</p>}
           <ul className="space-y-0.5">
             {g.items.map((i) => {
               const active = isActive(path, i);
@@ -57,10 +58,10 @@ function NavList({ groups, path, collapsed, onNavigate }: { groups: typeof NAV_G
                     className={clsx(
                       "flex h-9 items-center gap-3 rounded-lg px-2.5 text-[14px] font-medium transition-colors",
                       collapsed && "justify-center px-0",
-                      active ? "bg-french-blue/25 text-[#fff]" : "text-[#d6dbe4] hover:bg-white/[0.06] hover:text-[#fff]",
+                      active ? "bg-[#ffffff14] font-semibold text-[#fff]" : "text-[#cfd6e2] hover:bg-white/[0.06] hover:text-[#fff]",
                     )}
                   >
-                    <i.icon size={18} aria-hidden className={clsx("shrink-0", active ? "text-[#c9a469]" : "opacity-80")} />
+                    <i.icon size={18} aria-hidden className={clsx("shrink-0", active ? "text-[#E2BF7A]" : "opacity-75")} />
                     {!collapsed && <span className="truncate">{i.label}</span>}
                   </Link>
                 </li>
@@ -103,15 +104,16 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
     });
 
   const brand = (
-    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-4">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#b58a45] text-[17px] font-bold text-[#23324c]">N</span>
-      {!collapsed && (
-        <span className="min-w-0">
-          <span className="block truncate text-[14px] font-bold text-[#fff]">{businessName}</span>
-          <span className="block text-[11px] text-[#aeb6c4]">Console</span>
-        </span>
+    <Link href="/admin" className={clsx("on-navy flex shrink-0 flex-col justify-center border-b border-white/10", collapsed ? "h-[72px] items-center px-2" : "h-[92px] px-5 pt-1")} aria-label={`${businessName} console — dashboard`}>
+      {collapsed ? (
+        <LogoMark className="h-10 w-10" />
+      ) : (
+        <>
+          <Logo className="w-[150px]" title={businessName} />
+          <span className="mt-0.5 pl-[7px] text-[10.5px] font-semibold uppercase tracking-[0.26em] text-[#E2BF7A]/75">Console</span>
+        </>
       )}
-    </div>
+    </Link>
   );
 
   const userBox = (compact: boolean) => (
@@ -119,16 +121,16 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
       {!compact && (
         <div className="mb-2 px-2.5">
           <p className="truncate text-[13.5px] font-semibold text-[#fff]">{user.name}</p>
-          <p className="truncate text-[12px] text-[#aeb6c4]">
+          <p className="truncate text-[12px] text-[#a9b4c8]">
             {user.roleName} · @{user.username}
           </p>
         </div>
       )}
       <div className={clsx("flex gap-1", compact && "flex-col")}>
-        <Link href="/admin/account" title="My account" className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-[13px] text-[#d6dbe4] hover:bg-white/[0.06] hover:text-[#fff]">
+        <Link href="/admin/account" title="My account" className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-[13px] text-[#cfd6e2] hover:bg-white/[0.06] hover:text-[#fff]">
           <KeyRound size={16} aria-hidden /> {!compact && "Account"}
         </Link>
-        <button onClick={signOut} title="Sign out" className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-[13px] text-[#d6dbe4] hover:bg-white/[0.06] hover:text-[#fff]">
+        <button onClick={signOut} title="Sign out" className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg text-[13px] text-[#cfd6e2] hover:bg-white/[0.06] hover:text-[#fff]">
           <LogOut size={16} aria-hidden /> {!compact && "Sign out"}
         </button>
       </div>
@@ -141,10 +143,10 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
         <div className="min-h-dvh bg-bg">
           {/* desktop / tablet sidebar */}
           {!kitchenOnly && (
-            <aside className={clsx("fixed inset-y-0 left-0 z-40 hidden flex-col bg-[#1b2740] md:flex dark:border-r dark:border-line dark:bg-[#141e31]", collapsed ? "w-[68px]" : "w-[248px]")}>
+            <aside className={clsx("fixed inset-y-0 left-0 z-40 hidden flex-col bg-brand-navy md:flex dark:border-r dark:border-line", collapsed ? "w-[68px]" : "w-[248px]")}>
               {brand}
               <NavList groups={groups} path={path} collapsed={collapsed} />
-              <button onClick={toggle} className="mx-2.5 mb-1 flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg text-[12.5px] text-[#aeb6c4] hover:bg-white/[0.06] hover:text-[#fff]" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+              <button onClick={toggle} className="mx-2.5 mb-1 mt-1 flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg text-[12.5px] text-[#a9b4c8] hover:bg-white/[0.06] hover:text-[#fff]" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
                 {collapsed ? <ChevronsRight size={16} /> : <>
                   <ChevronsLeft size={16} /> Collapse
                 </>}
@@ -157,10 +159,10 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
           {drawer && (
             <div className="fixed inset-0 z-50 md:hidden">
               <div className="absolute inset-0 bg-black/45" onClick={() => setDrawer(false)} aria-hidden />
-              <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col bg-[#1b2740] dark:bg-[#141e31]" aria-label="Console menu">
+              <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col bg-brand-navy" aria-label="Console menu">
                 <div className="flex items-center justify-between pr-2">
                   {brand}
-                  <button onClick={() => setDrawer(false)} className="grid h-9 w-9 place-items-center rounded-lg text-[#d6dbe4]" aria-label="Close menu">
+                  <button onClick={() => setDrawer(false)} className="grid h-9 w-9 place-items-center rounded-lg text-[#cfd6e2]" aria-label="Close menu">
                     <X size={18} />
                   </button>
                 </div>
@@ -177,7 +179,10 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
                   <Menu size={19} />
                 </button>
               )}
-              {kitchenOnly && <span className="text-[15px] font-bold text-fg">{businessName} · Kitchen</span>}
+              <Link href="/admin" className={clsx("items-center gap-2", kitchenOnly ? "flex" : "flex md:hidden")} aria-label={`${businessName} console`}>
+                <Logo className="w-[112px]" title={businessName} />
+                {kitchenOnly && <span className="text-[13px] font-semibold uppercase tracking-[0.18em] text-muted">Kitchen</span>}
+              </Link>
               <div className="ml-auto flex items-center gap-2">
                 <Link href="/" target="_blank" className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-muted hover:bg-surface-2 hover:text-fg sm:flex">
                   Customer site <ExternalLink size={13} aria-hidden />

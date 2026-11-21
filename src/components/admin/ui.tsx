@@ -146,7 +146,7 @@ export function PageHeader({ title, description, actions, back }: { title: React
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {back}
-        <h1 className="text-[22px] font-bold tracking-[-0.01em] text-fg md:text-[24px]">{title}</h1>
+        <h1 className="font-display text-[25px] font-semibold leading-tight text-fg md:text-[28px]">{title}</h1>
         {description && <p className="mt-0.5 max-w-2xl text-[14px] text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

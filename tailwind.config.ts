@@ -6,7 +6,7 @@ import type { Config } from "tailwindcss";
  * modifiers like bg-primary/10 — follows the active theme.
  *
  * Source palette (sampled from the brand palette image):
- *   Champagne #DBC7AC · Ivory #F4EEE2 · French Blue #7A94AC · Gold #B58A45 · Navy #23324C
+ *   Logo navy #0B2A55 · Logo gold #C29545 · Marble ivory #FAF6EC
  */
 const v = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
 
@@ -36,8 +36,9 @@ const config: Config = {
         success: { DEFAULT: v("success"), soft: v("success-soft") },
         warning: { DEFAULT: v("warning"), soft: v("warning-soft") },
         // brand palette (fixed, for brand moments)
-        champagne: "#DBC7AC",
-        "french-blue": "#7A94AC",
+        "brand-navy": v("brand-navy"),
+        "brand-gold": v("brand-gold"),
+        "brand-ink": v("brand-ink"),
         // legacy names used by the customer app — theme-aware
         white: v("white"),
         navy: { 950: v("navy-950"), 900: v("navy-900"), 800: v("navy-800"), 700: v("navy-700"), 600: v("navy-600"), 500: v("navy-500") },
@@ -51,7 +52,7 @@ const config: Config = {
         egg: v("egg"),
       },
       fontFamily: {
-        display: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       boxShadow: {

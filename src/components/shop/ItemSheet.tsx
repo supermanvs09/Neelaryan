@@ -73,7 +73,7 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
           <p className="text-[14.5px] text-muted">{item.description}</p>
         </div>
         {p.ok && p.offer && (
-          <p className="mt-3 inline-flex rounded-lg bg-success-soft px-2.5 py-1 text-[13px] font-semibold text-success">
+          <p className="mt-3 inline-flex rounded-full border border-accent/40 bg-accent-soft px-3 py-1 text-[13px] font-semibold text-accent-text">
             {t("menu.off", { pct: p.offer.percent_off })} · {p.offer.title}
           </p>
         )}
