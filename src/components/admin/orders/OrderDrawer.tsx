@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Printer } from "lucide-react";
+import { CalendarClock, Printer, Smartphone } from "lucide-react";
 import { Badge, Button, Dialog, ErrorBlock, Field, Input, LoadingBlock, Notice, Select, Textarea, useToast } from "../ui";
 import { useCan } from "../AdminShell";
 import { apiFetch, useApi, type ClientApiError } from "@/lib/api-client";
 import { dateTime, money } from "@/lib/format";
-import { modifierText, NEXT_LABEL, PaymentBadge, StatusBadge, STATUS_LABEL, typeLabel, type OrderStatus, type PaymentStatus } from "./shared";
+import { modifierText, printTicket, NEXT_LABEL, PaymentBadge, StatusBadge, STATUS_LABEL, typeLabel, type OrderStatus, type PaymentStatus } from "./shared";
 
 interface Detail {
   id: string;
@@ -32,7 +32,11 @@ interface Detail {
   created_at: string;
   created_by_name: string | null;
   cancel_reason: string | null;
-  items: { id: string; name: string; variant_name: string; modifiers: { name: string; group: string; price: number }[]; qty: number; unit_price: number; line_total: number; unit_cost?: number | null; notes: string }[];
+  payment_method: "cash" | "upi" | "counter";
+  upi_claimed_at: string | null;
+  upi_reference: string | null;
+  scheduled_for: string | null;
+  items: { id: string; name: string; variant_name: string; modifiers: { name: string; group: string; price: number }[]; qty: number; unit_price: number; line_total: number; unit_cost?: number | null; notes: string; discount?: number; offer_title?: string | null }[];
   payments: { id: string; kind: string; method: string; amount: number; reference: string; created_at: string; by: string | null }[];
   events: { status: string; note: string; at: string; by: string | null }[];
   next: OrderStatus[];
@@ -101,10 +105,55 @@ export function OrderDrawer({ id, onClose, onChanged }: { id: string; onClose: (
             <PaymentBadge status={o.payment_status} refundDue={refundDue} />
             {o.price_tier === "wholesale" && <Badge tone="accent">Wholesale</Badge>}
             <Badge>{o.channel === "qr" ? "Table QR" : o.channel === "web" ? "Online" : "Counter"}</Badge>
-            <Button size="sm" variant="secondary" className="ml-auto" icon={<Printer size={14} />} onClick={print}>
-              Print bill
-            </Button>
+            <span className="ml-auto flex gap-1.5">
+              <Select aria-label="Print kitchen ticket" value="" className="h-8 w-auto text-[13px]" onChange={(e) => e.target.value && printTicket(o, Number(e.target.value) as 58 | 80)}>
+                <option value="">Kitchen ticket…</option>
+                <option value="80">80 mm printer</option>
+                <option value="58">58 mm printer</option>
+              </Select>
+              <Button size="sm" variant="secondary" icon={<Printer size={14} />} onClick={print}>
+                Print bill
+              </Button>
+            </span>
           </div>
+          {o.scheduled_for && !["completed", "cancelled", "rejected"].includes(o.status) && (
+            <Notice tone="primary">
+              <span className="flex items-center gap-2">
+                <CalendarClock size={16} aria-hidden /> Pre-order for pickup at <b>{new Date(o.scheduled_for).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })}</b>. The kitchen sees it 15 minutes before.
+              </span>
+            </Notice>
+          )}
+          {o.payment_method === "upi" && o.payment_status !== "paid" && o.payment_status !== "refunded" && !["cancelled", "rejected"].includes(o.status) && (
+            <Notice tone={o.upi_claimed_at ? "warning" : "primary"}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Smartphone size={16} aria-hidden />
+                <span className="min-w-0 flex-1">
+                  {o.upi_claimed_at ? (
+                    <>
+                      Guest says they paid <b>{money(due)}</b> by UPI at {dateTime(o.upi_claimed_at)}
+                      {o.upi_reference ? (
+                        <>
+                          {" "}· ref <b className="num">{o.upi_reference}</b>
+                        </>
+                      ) : null}
+                      . Check your UPI app before confirming.
+                    </>
+                  ) : (
+                    <>Guest chose to pay by UPI. Waiting for them to pay.</>
+                  )}
+                </span>
+                {o.upi_claimed_at && due > 0 && can("billing.manage") && (
+                  <Button
+                    size="sm"
+                    loading={busy === "upi"}
+                    onClick={() => run("upi", () => apiFetch(`/api/admin/orders/${id}/payments`, { body: { method: "upi", amount: due, reference: o.upi_reference ?? "" } }), "UPI payment confirmed")}
+                  >
+                    Received · confirm
+                  </Button>
+                )}
+              </div>
+            </Notice>
+          )}
 
           {err && <Notice tone="danger">{err.message}</Notice>}
           {o.cancel_reason && <Notice tone="danger">Reason: {o.cancel_reason}</Notice>}
@@ -226,6 +275,7 @@ export function OrderDrawer({ id, onClose, onChanged }: { id: string; onClose: (
                     {i.variant_name && <span className="text-muted"> · {i.variant_name}</span>}
                     {i.modifiers.length > 0 && <span className="block text-[12.5px] text-muted">{modifierText(i.modifiers)}</span>}
                     {i.notes && <span className="block text-[12.5px] font-semibold text-warning">Note: {i.notes}</span>}
+                    {i.offer_title && Number(i.discount) > 0 && <span className="block text-[12.5px] text-success">{i.offer_title} · −{money(Number(i.discount) * i.qty)}</span>}
                   </span>
                   <span className="num shrink-0 text-right">
                     {money(i.line_total)}

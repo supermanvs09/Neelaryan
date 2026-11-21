@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, BellOff, Plus, Search, Download } from "lucide-react";
+import { Bell, BellOff, CalendarClock, Plus, Search, Download } from "lucide-react";
 import { Badge, Button, Card, DataTable, Empty, ErrorBlock, Input, LoadingBlock, PageHeader, Segmented, Select, Tabs } from "../ui";
 import { useCan } from "../AdminShell";
 import { qs, useApi } from "@/lib/api-client";
 import { ago, addDays, istDate, money, timeOf } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import { OrderDrawer } from "./OrderDrawer";
+import { TableRequests } from "./TableRequests";
+import { StaffAlerts } from "./StaffAlerts";
 import { chime, minutesSince, modifierText, PaymentBadge, StatusBadge, typeLabel, type OrderRow, type OrderStatus } from "./shared";
 
 const COLUMNS: { key: string; title: string; statuses: OrderStatus[]; hint: string }[] = [
@@ -88,7 +90,11 @@ function Board({ onOpen }: { onOpen: (id: string) => void }) {
     seen.current = new Set([...(seen.current ?? []), ...ids]);
   }, [data, sound]);
 
-  const orders = useMemo(() => (data?.orders ?? []).filter((o) => type === "all" || o.type === type), [data, type]);
+  // pre-orders stay in "Later" until 15 minutes before pickup
+  const isHeld = (o: OrderRow) => !!o.scheduled_for && ["new", "accepted"].includes(o.status) && new Date(o.scheduled_for).getTime() - 15 * 60000 > now;
+  const all = useMemo(() => (data?.orders ?? []).filter((o) => type === "all" || o.type === type), [data, type]);
+  const later = all.filter(isHeld).sort((a, b) => a.scheduled_for!.localeCompare(b.scheduled_for!));
+  const orders = all.filter((o) => !isHeld(o));
   const today = (data?.orders ?? []).filter((o) => o.status === "completed");
   const takings = today.reduce((s, o) => s + Number(o.amount_paid), 0);
 
@@ -119,11 +125,35 @@ function Board({ onOpen }: { onOpen: (id: string) => void }) {
         <Button variant="secondary" size="sm" icon={sound ? <Bell size={15} /> : <BellOff size={15} />} onClick={toggleSound} aria-pressed={sound}>
           New-order sound {sound ? "on" : "off"}
         </Button>
+        <StaffAlerts />
         <span className="ml-auto text-[13px] text-muted">
           Completed today: <b className="num text-fg">{today.length}</b> · collected <b className="num text-fg">{money(takings)}</b>
         </span>
       </div>
       <ErrorBlock error={error} retry={reload} />
+      <TableRequests sound={sound} />
+      {later.length > 0 && (
+        <section aria-label="Pre-orders for later" className="mb-4 rounded-lg border border-line bg-surface p-3">
+          <h2 className="mb-2 flex items-center gap-2 text-[13px] font-bold uppercase tracking-wide text-muted">
+            <CalendarClock size={15} aria-hidden /> Later · pre-orders <span className="num rounded-md bg-surface-2 px-1.5 text-fg">{later.length}</span>
+          </h2>
+          <ul className="flex flex-wrap gap-2">
+            {later.map((o) => (
+              <li key={o.id}>
+                <button onClick={() => onOpen(o.id)} className={clsx("rounded-lg border px-3 py-2 text-left hover:border-line-strong", o.status === "new" ? "border-accent" : "border-line")}>
+                  <span className="num block text-[14px] font-bold">
+                    #{o.number} · {timeOf(o.scheduled_for!)}
+                  </span>
+                  <span className="block max-w-[220px] truncate text-[12.5px] text-muted">
+                    {o.status === "new" ? "Accept now · " : ""}
+                    {o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {loading ? (
         <LoadingBlock rows={6} />
       ) : (
@@ -160,7 +190,11 @@ function Board({ onOpen }: { onOpen: (id: string) => void }) {
                         </ul>
                         <div className="mt-2 flex items-center justify-between gap-2">
                           <span className="num text-[13.5px] font-semibold">{money(o.total)}</span>
-                          <PaymentBadge status={o.payment_status} />
+                          <span className="flex flex-wrap justify-end gap-1">
+                            {o.scheduled_for && <Badge tone="primary">Pickup {timeOf(o.scheduled_for)}</Badge>}
+                            {o.payment_method === "upi" && o.payment_status !== "paid" && <Badge tone={o.upi_claimed_at ? "warning" : "neutral"}>{o.upi_claimed_at ? "UPI · verify" : "UPI"}</Badge>}
+                            <PaymentBadge status={o.payment_status} />
+                          </span>
                         </div>
                       </button>
                     );

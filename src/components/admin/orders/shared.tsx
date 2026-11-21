@@ -33,6 +33,9 @@ export interface OrderRow {
   table_label: string | null;
   table_id: string | null;
   customer_id: string | null;
+  payment_method?: "cash" | "upi" | "counter";
+  upi_claimed_at?: string | null;
+  scheduled_for?: string | null;
   items: OrderLine[];
 }
 
@@ -108,6 +111,43 @@ export function chime() {
   }
 }
 
+export const timeShort = (v: string) => new Date(v).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
+
 export function minutesSince(iso: string, now: number) {
   return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000));
+}
+
+const escHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+/** Kitchen ticket for 58 mm or 80 mm thermal printers (no prices; big order number). */
+export function printTicket(
+  o: { number: number; type: string; table_label: string | null; customer_name?: string; notes?: string; created_at: string; scheduled_for?: string | null; items: { qty: number; name: string; variant_name?: string; variant?: string; modifiers: { name: string; group: string }[]; notes: string }[] },
+  width: 58 | 80,
+) {
+  const w = window.open("", "_blank", "width=380,height=640");
+  if (!w) return;
+  const t = (v: string) => new Date(v).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
+  const items = o.items
+    .map((i) => {
+      const v = i.variant_name ?? i.variant ?? "";
+      const mods = modifierText(i.modifiers);
+      return `<div class="i"><b>${i.qty} × ${escHtml(i.name)}</b>${v ? ` (${escHtml(v)})` : ""}${mods ? `<div class="m">${escHtml(mods)}</div>` : ""}${i.notes ? `<div class="m">“${escHtml(i.notes)}”</div>` : ""}</div>`;
+    })
+    .join("");
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Ticket #${o.number}</title><style>
+    @page{size:${width}mm auto;margin:2mm}
+    body{width:${width - 4}mm;margin:0;font:${width === 58 ? 12 : 13}px/1.35 ui-monospace,Menlo,Consolas,monospace;color:#000}
+    h1{font-size:${width === 58 ? 26 : 32}px;margin:0 0 2px;text-align:center}
+    .c{text-align:center}.i{padding:4px 0;border-bottom:1px dashed #000}.m{padding-left:10px}
+    .big{font-size:15px;font-weight:700;text-align:center;border:1.5px solid #000;padding:3px;margin:4px 0}
+  </style></head><body>
+    <h1>#${o.number}</h1>
+    <div class="big">${escHtml(typeLabel(o))}</div>
+    <div class="c">${t(o.created_at)}${o.customer_name ? ` · ${escHtml(o.customer_name)}` : ""}</div>
+    ${o.scheduled_for ? `<div class="big">PICKUP ${t(o.scheduled_for)}</div>` : ""}
+    ${items}
+    ${o.notes ? `<p><b>Note:</b> ${escHtml(o.notes)}</p>` : ""}
+    <script>window.onload=function(){window.print();setTimeout(function(){window.close()},300)}</script>
+  </body></html>`);
+  w.document.close();
 }

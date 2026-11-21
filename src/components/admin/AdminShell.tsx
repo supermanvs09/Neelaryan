@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronsLeft, ChevronsRight, KeyRound, LogOut, Menu, X, ExternalLink } from "lucide-react";
-import { NAV_GROUPS, type NavItem } from "./nav";
+import { NAV_GROUPS, navAllowed, type NavItem } from "./nav";
 import { ThemeSwitch } from "@/components/theme";
 import { ToastProvider } from "./ui";
 import { apiFetch } from "@/lib/api-client";
@@ -81,7 +81,7 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
   const path = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
-  const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => user.permissions.includes(i.perm)) })).filter((g) => g.items.length);
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => navAllowed(i, user.permissions)) })).filter((g) => g.items.length);
   const kitchenOnly = groups.length === 1 && groups[0].items.length === 1 && groups[0].items[0].href === "/admin/kitchen";
 
   useEffect(() => {

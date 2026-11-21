@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   History,
   Settings,
+  BadgePercent,
+  Wallet,
+  MessageSquareText,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission } from "@/server/auth/permissions";
@@ -22,7 +25,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  perm: Permission;
+  /** any one of these */
+  perm: Permission | Permission[];
   exact?: boolean;
 }
 
@@ -40,6 +44,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Catalogue",
     items: [
       { href: "/admin/menu", label: "Menu", icon: BookOpen, perm: "menu.view" },
+      { href: "/admin/offers", label: "Offers", icon: BadgePercent, perm: ["menu.view", "reports.view"] },
       { href: "/admin/inventory", label: "Inventory", icon: Boxes, perm: "inventory.view" },
       { href: "/admin/purchases", label: "Purchases & suppliers", icon: Truck, perm: "purchases.manage" },
     ],
@@ -47,6 +52,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Money",
     items: [
+      { href: "/admin/closing", label: "Close the day", icon: Wallet, perm: ["finance.view", "billing.refund"] },
       { href: "/admin/finance", label: "Finance & P&L", icon: LineChart, perm: "finance.view" },
       { href: "/admin/reports", label: "Reports", icon: FileBarChart, perm: "reports.view" },
     ],
@@ -55,6 +61,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Customers",
     items: [
       { href: "/admin/customers", label: "Customers", icon: Users, perm: "customers.view" },
+      { href: "/admin/feedback", label: "Guest feedback", icon: MessageSquareText, perm: ["customers.view", "reports.view"] },
       { href: "/admin/loyalty", label: "Loyalty & rewards", icon: Gift, perm: "loyalty.manage" },
       { href: "/admin/notifications", label: "Notifications", icon: Megaphone, perm: "notifications.manage" },
     ],
@@ -71,6 +78,8 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
 
 /** Where a user lands after sign-in: the first module they can use. */
 export function homeFor(perms: string[]) {
-  for (const g of NAV_GROUPS) for (const i of g.items) if (perms.includes(i.perm)) return i.href;
+  for (const g of NAV_GROUPS) for (const i of g.items) if (navAllowed(i, perms)) return i.href;
   return "/admin/account";
 }
+
+export const navAllowed = (i: NavItem, perms: readonly string[]) => (Array.isArray(i.perm) ? i.perm : [i.perm]).some((p) => perms.includes(p));

@@ -341,7 +341,7 @@ export async function orderDetail(orderId: string, db: Queryable | null = null) 
   );
   if (!rows[0]) return null;
   const [items, payments, events] = await Promise.all([
-    run("select id, menu_item_id, inventory_item_id, name, variant_name, modifiers, qty, unit_price, line_total, unit_cost, notes from order_items where order_id = $1 order by id", [orderId]),
+    run("select id, menu_item_id, inventory_item_id, name, variant_name, modifiers, qty, unit_price, line_total, unit_cost, notes, discount, offer_title from order_items where order_id = $1 order by id", [orderId]),
     run("select p.id, p.kind, p.method, p.amount, p.reference, p.created_at, u.name as by from payments p left join users u on u.id = p.created_by where order_id = $1 order by created_at", [orderId]),
     run("select e.status, e.note, e.at, u.name as by from order_events e left join users u on u.id = e.user_id where order_id = $1 order by e.at, e.id", [orderId]),
   ]);
