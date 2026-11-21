@@ -179,7 +179,7 @@ export function Stat({ label, value, sub, tone = "default", href }: { label: str
       {sub && <p className="mt-0.5 text-[12.5px] text-muted">{sub}</p>}
     </>
   );
-  const cls = clsx("block min-w-0 rounded-xl border border-line bg-surface px-4 py-3", tone === "accent" && "border-l-4 border-l-accent");
+  const cls = clsx("block min-w-0 rounded-xl border border-line bg-surface px-4 py-3", tone === "accent" && "border-accent/60 bg-accent-soft/40");
   return href ? (
     <a href={href} className={clsx(cls, "transition-colors hover:border-line-strong")}>
       {body}
