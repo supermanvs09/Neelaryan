@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { priceLine, type PricingMenu } from "@/lib/pricing";
+import { bestOffer, cafeClock, discountFor, type Offer } from "@/lib/offers";
 
 /** Shapes returned by GET /api/menu (public, no costs). */
 export interface ShopModifier {
@@ -37,6 +38,8 @@ export interface ShopItem {
   variants: { id: string; name: string; price: number; is_default: boolean }[];
   group_ids: string[];
   default_modifier_ids: string[];
+  /** ready-made items: portions left (null = not stock-tracked) */
+  stock_left: number | null;
 }
 export interface ShopCategory {
   id: string;
@@ -49,7 +52,10 @@ export interface ShopMenu extends PricingMenu {
   categories: ShopCategory[];
   items: ShopItem[];
   groups: ShopGroup[];
-  ordering: { accepting_orders: boolean; takeaway_enabled: boolean; closed_message: string };
+  ordering: { accepting_orders: boolean; takeaway_enabled: boolean; closed_message: string; preorders_enabled: boolean; show_wait_time: boolean };
+  payments: { cash: boolean; upi: boolean; upi_id: string | null; upi_payee_name: string };
+  push_key: string | null;
+  offers: Offer[];
   tax: { gst_percent: number; service_charge_percent: number };
   business: { name: string; tagline: string };
   loyalty: { enabled: boolean; points_per_100: number; min_order_amount: number; point_value: number; min_redeem_points: number; max_redeem_percent: number };
@@ -110,3 +116,12 @@ export function visualKeys(m: ShopMenu, item: ShopItem, modifierIds: string[]) {
 }
 
 export { priceLine };
+
+/** The offer an item gets right now (for strike-through prices on the menu). */
+export function itemOffer(m: ShopMenu, item: ShopItem, at = new Date()) {
+  const o = bestOffer(item.id, m.offers ?? [], cafeClock(at));
+  if (!o) return null;
+  const base = fromPrice(item);
+  const off = discountFor(base, o.percent_off);
+  return off > 0 ? { offer: o, price: base - off, was: base } : null;
+}

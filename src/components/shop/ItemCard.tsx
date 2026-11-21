@@ -1,7 +1,8 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { defaultSelection, fromPrice, isBuilder, useMenu, type ShopItem, type ShopMenu } from "@/lib/shop/menu";
+import { defaultSelection, fromPrice, isBuilder, itemOffer, useMenu, type ShopItem, type ShopMenu } from "@/lib/shop/menu";
+import { useT } from "@/lib/shop/i18n";
 import { useShop } from "@/lib/shop/store";
 import { DietMark, ShopButton, Spinner, rupee, toast } from "./ui";
 import { ItemVisual } from "./ItemVisual";
@@ -10,7 +11,10 @@ import { clsx } from "@/lib/clsx";
 
 export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item: ShopItem; layout?: "row" | "tile" }) {
   const open = useOpenItem();
+  const t = useT();
   const add = useShop((s) => s.add);
+  const deal = itemOffer(menu, item);
+  const fewLeft = item.stock_left !== null && item.stock_left > 0 && item.stock_left <= 5;
   const soldOut = item.status !== "available";
   const configurable = isBuilder(item) || item.variants.length > 1 || item.group_ids.length > 0;
 
@@ -19,20 +23,25 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
     if (configurable) return open(item);
     const d = defaultSelection(menu, item);
     add({ item_id: item.id, variant_id: d.variant_id, modifier_ids: d.modifier_ids, qty: 1 });
-    toast(`${item.name} added`);
+    toast(t("item.added", { qty: 1, name: item.name }));
   };
 
   const price = (
-    <span className="num text-[15px] font-bold">
-      {item.variants.length > 1 && <span className="text-[12.5px] font-normal text-muted">from </span>}
-      {rupee(fromPrice(item))}
+    <span className="flex flex-wrap items-baseline gap-x-1.5">
+      <span className="num text-[15px] font-bold">
+        {item.variants.length > 1 && <span className="text-[12.5px] font-normal text-muted">{t("menu.from")} </span>}
+        {rupee(deal ? deal.price : fromPrice(item))}
+      </span>
+      {deal && <span className="num text-[13px] text-muted line-through">{rupee(deal.was)}</span>}
+      {deal && <span className="rounded bg-success-soft px-1.5 py-0.5 text-[11.5px] font-bold text-success">{t("menu.off", { pct: deal.offer.percent_off })}</span>}
+      {fewLeft && !soldOut && <span className="text-[12px] font-semibold text-warning">{t("menu.left", { n: item.stock_left! })}</span>}
     </span>
   );
   const button = soldOut ? (
-    <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-muted">Sold out</span>
+    <span className="rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-muted">{t("menu.soldOut")}</span>
   ) : (
     <button type="button" onClick={quickAdd} className="inline-flex h-9 items-center gap-1 rounded-lg border border-primary px-3.5 text-[13.5px] font-semibold text-primary hover:bg-primary hover:text-primary-fg" aria-label={`${configurable ? "Choose options for" : "Add"} ${item.name}`}>
-      <Plus size={15} aria-hidden /> {isBuilder(item) ? "Build" : "Add"}
+      <Plus size={15} aria-hidden /> {isBuilder(item) ? t("menu.build") : t("menu.add")}
     </button>
   );
 
@@ -79,6 +88,7 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
 }
 
 export function MenuGate({ children }: { children: (menu: ShopMenu) => React.ReactNode }) {
+  const t = useT();
   const menu = useMenu((s) => s.menu);
   const error = useMenu((s) => s.error);
   const load = useMenu((s) => s.load);
@@ -86,10 +96,10 @@ export function MenuGate({ children }: { children: (menu: ShopMenu) => React.Rea
   if (error)
     return (
       <div className="mx-auto max-w-md py-20 text-center">
-        <p className="text-[17px] font-semibold">We couldn&apos;t load the menu</p>
+        <p className="text-[17px] font-semibold">{t("menu.loadFailed")}</p>
         <p className="mt-1 text-muted">{error}</p>
         <ShopButton className="mt-5" onClick={() => load(true)}>
-          Try again
+          {t("menu.retry")}
         </ShopButton>
       </div>
     );

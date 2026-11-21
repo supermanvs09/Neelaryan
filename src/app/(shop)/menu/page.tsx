@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Clock, Search, Tag, X } from "lucide-react";
 import { ItemCard, MenuGate } from "@/components/shop/ItemCard";
 import type { ShopMenu } from "@/lib/shop/menu";
+import { useT } from "@/lib/shop/i18n";
+import { cafeClock, endsLabel, isOfferLive } from "@/lib/offers";
+import { useEta } from "@/components/shop/useEta";
 import { clsx } from "@/lib/clsx";
 
 export default function MenuPage() {
@@ -17,6 +20,10 @@ function Menu({ menu }: { menu: ShopMenu }) {
   const [diet, setDiet] = useState<Diet>("all");
   const [active, setActive] = useState<string | null>(null);
   const rail = useRef<HTMLDivElement>(null);
+  const t = useT();
+  const eta = useEta(menu.ordering.show_wait_time && menu.ordering.accepting_orders);
+  const clock = cafeClock();
+  const live = (menu.offers ?? []).filter((o) => isOfferLive(o, clock));
 
   const sections = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -56,9 +63,9 @@ function Menu({ menu }: { menu: ShopMenu }) {
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the menu" aria-label="Search the menu" className="field-input h-11 w-full pl-10 pr-10" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("menu.search")} aria-label={t("menu.search")} className="field-input h-11 w-full pl-10 pr-10" />
             {q && (
-              <button type="button" onClick={() => setQ("")} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-surface-2" aria-label="Clear search">
+              <button type="button" onClick={() => setQ("")} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-surface-2" aria-label={t("menu.clear")}>
                 <X size={16} />
               </button>
             )}
@@ -67,7 +74,7 @@ function Menu({ menu }: { menu: ShopMenu }) {
             <span className="grid h-[14px] w-[14px] place-items-center rounded-[3px] border-[1.5px] border-veg">
               <span className="h-[6px] w-[6px] rounded-full bg-veg" />
             </span>
-            Veg only
+            {t("menu.vegOnly")}
           </button>
         </div>
         <div ref={rail} className="no-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0" role="navigation" aria-label="Menu sections">
@@ -89,11 +96,27 @@ function Menu({ menu }: { menu: ShopMenu }) {
         </div>
       </div>
 
+      {(eta !== null || live.length > 0) && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {eta !== null && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-[13.5px] font-semibold">
+              <Clock size={15} className="text-primary" aria-hidden /> {t(eta.busy ? "eta.busy" : "eta.quiet", { min: eta.minutes })}
+            </span>
+          )}
+          {live.slice(0, 3).map((o) => (
+            <span key={o.id} className="inline-flex items-center gap-1.5 rounded-lg bg-success-soft px-3 py-1.5 text-[13.5px] font-semibold text-success">
+              <Tag size={15} aria-hidden /> {o.title} · {t("menu.off", { pct: o.percent_off })}
+              {o.menu_item_ids.length === 0 && ` · ${t("offers.whole")}`}
+              {endsLabel(o) && <span className="font-normal"> · {t("offers.until", { time: endsLabel(o)! })}</span>}
+            </span>
+          ))}
+        </div>
+      )}
       {!total ? (
         <div className="py-20 text-center">
-          <p className="text-[17px] font-semibold">Nothing matches “{q}”</p>
+          <p className="text-[17px] font-semibold">{t("menu.nothing", { q })}</p>
           <button type="button" onClick={() => (setQ(""), setDiet("all"))} className="mt-3 font-semibold text-primary hover:underline">
-            Show everything
+            {t("menu.showAll")}
           </button>
         </div>
       ) : (

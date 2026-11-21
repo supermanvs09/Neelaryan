@@ -7,6 +7,7 @@ import { useMenu, itemById } from "@/lib/shop/menu";
 import { priceCart, totalsFor, useShop } from "@/lib/shop/store";
 import { Sheet, ShopButton, Stepper, rupee } from "./ui";
 import { ItemVisual } from "./ItemVisual";
+import { useT } from "@/lib/shop/i18n";
 import { useOpenItem } from "./ItemSheet";
 
 export const useCartSheet = create<{ open: boolean; set: (v: boolean) => void }>((set) => ({ open: false, set: (open) => set({ open }) }));
@@ -20,6 +21,7 @@ export function CartSheet() {
   const mode = useShop((s) => s.mode);
   const table = useShop((s) => s.table);
   const openItem = useOpenItem();
+  const tr = useT();
   const { lines, subtotal, count, blocked } = priceCart(menu, cart);
   const t = totalsFor(menu, subtotal, 0);
 
@@ -28,35 +30,35 @@ export function CartSheet() {
       open={open}
       onClose={() => setOpen(false)}
       side
-      title={count ? `Your order · ${count} item${count === 1 ? "" : "s"}` : "Your order"}
+      title={count ? `${tr("cart.title")} · ${count === 1 ? tr("cart.item") : tr("cart.items", { n: count })}` : tr("cart.title")}
       footer={
         count > 0 && (
           <div>
             <dl className="mb-3 space-y-1 text-[14px]">
               <div className="flex justify-between text-muted">
-                <dt>Items</dt>
+                <dt>{tr("cart.itemsTotal")}</dt>
                 <dd className="num">{rupee(t.subtotal)}</dd>
               </div>
               {t.service_charge > 0 && (
                 <div className="flex justify-between text-muted">
-                  <dt>Service charge</dt>
+                  <dt>{tr("cart.service")}</dt>
                   <dd className="num">{rupee(t.service_charge)}</dd>
                 </div>
               )}
               <div className="flex justify-between text-muted">
-                <dt>GST ({menu?.tax.gst_percent ?? 0}%)</dt>
+                <dt>{tr("cart.gst", { pct: menu?.tax.gst_percent ?? 0 })}</dt>
                 <dd className="num">{rupee(t.tax)}</dd>
               </div>
               <div className="flex justify-between text-[17px] font-bold">
-                <dt>Total</dt>
+                <dt>{tr("cart.total")}</dt>
                 <dd className="num">{rupee(t.total)}</dd>
               </div>
             </dl>
             {blocked ? (
-              <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13.5px] text-danger">Remove the items marked unavailable to continue.</p>
+              <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13.5px] text-danger">{tr("cart.unavailable")}</p>
             ) : (
               <Link href="/checkout" onClick={() => setOpen(false)} className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-primary text-[16px] font-semibold text-primary-fg hover:bg-primary-hover">
-                {mode === "dine_in" && table ? `Checkout · Table ${table.label}` : "Checkout"}
+                {mode === "dine_in" && table ? `${tr("cart.checkout")} · ${tr("ctx.table", { table: table.label })}` : tr("cart.checkout")}
               </Link>
             )}
           </div>
@@ -66,10 +68,10 @@ export function CartSheet() {
       {!count ? (
         <div className="px-6 py-16 text-center">
           <ShoppingBag size={28} className="mx-auto text-muted" aria-hidden />
-          <p className="mt-3 text-[16px] font-semibold">Your order is empty</p>
-          <p className="mt-1 text-[14px] text-muted">Add something from the menu to get started.</p>
+          <p className="mt-3 text-[16px] font-semibold">{tr("cart.empty")}</p>
+          <p className="mt-1 text-[14px] text-muted">{tr("cart.emptyHint")}</p>
           <Link href="/menu" onClick={() => setOpen(false)} className="mt-5 inline-flex min-h-[48px] items-center rounded-lg border border-line px-6 font-semibold hover:border-line-strong">
-            Browse the menu
+            {tr("cart.browse")}
           </Link>
         </div>
       ) : (
@@ -98,12 +100,12 @@ export function CartSheet() {
                       <Stepper size="sm" value={l.line.qty} onChange={(v) => setQty(l.line.key, v)} label={l.name} />
                     ) : (
                       <ShopButton variant="secondary" className="min-h-[36px] px-3 text-[13px]" onClick={() => setQty(l.line.key, 0)}>
-                        <Trash2 size={14} /> Remove
+                        <Trash2 size={14} /> {tr("cart.remove")}
                       </ShopButton>
                     )}
                     {l.ok && item && (
                       <button type="button" className="text-[13px] font-semibold text-primary hover:underline" onClick={() => (setOpen(false), openItem(item, l.line))}>
-                        Edit
+                        {tr("cart.edit")}
                       </button>
                     )}
                   </div>

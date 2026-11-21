@@ -10,6 +10,7 @@ import { useShop, type CartLine } from "@/lib/shop/store";
 import { Choice } from "./ItemSheet";
 import { groupTitle, optionDelta, useSelection } from "./selection";
 import { DietMark, ShopButton, Stepper, rupee, toast } from "./ui";
+import { useT } from "@/lib/shop/i18n";
 
 const NUTRITION = new Map(OATS_STEPS.flatMap((s) => s.groups.flatMap((g) => g.options.map((o) => [o.id as string, o.nutrition] as const))));
 
@@ -24,6 +25,7 @@ export function Builder({ menu, item, edit }: { menu: ShopMenu; item: ShopItem; 
   const [notes, setNotes] = useState(edit?.notes ?? "");
   const add = useShop((s) => s.add);
   const replace = useShop((s) => s.replace);
+  const t = useT();
   const p = sel.price(qty);
   const soldOut = item.status !== "available";
 
@@ -44,20 +46,20 @@ export function Builder({ menu, item, edit }: { menu: ShopMenu; item: ShopItem; 
     const line = { item_id: item.id, variant_id: sel.variant, modifier_ids: sel.mods, qty, notes: notes.trim() || undefined };
     if (edit) replace(edit.key, line);
     else add(line);
-    toast(edit ? "Updated" : `${qty} × ${item.name} added`);
+    toast(edit ? t("item.updated") : t("item.added", { qty, name: item.name }));
     router.push("/menu");
   };
 
   const action = (
     <ShopButton className="flex-1" onClick={done} disabled={!p.ok || soldOut}>
-      {soldOut ? "Sold out right now" : p.ok ? `${edit ? "Update order" : "Add to order"} · ${rupee(p.lineTotal)}` : p.error}
+      {soldOut ? t("item.soldOutNow") : p.ok ? t(edit ? "build.updateOrder" : "build.addOrder", { price: rupee(p.lineTotal) }) : p.error}
     </ShopButton>
   );
 
   return (
     <div>
       <Link href="/menu" className="inline-flex h-10 items-center gap-1.5 pr-3 text-[14px] font-semibold text-muted hover:text-fg">
-        <ArrowLeft size={17} aria-hidden /> Menu
+        <ArrowLeft size={17} aria-hidden /> {t("nav.menu")}
       </Link>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -68,7 +70,7 @@ export function Builder({ menu, item, edit }: { menu: ShopMenu; item: ShopItem; 
           <p className="mt-0.5 text-[14.5px] text-muted">{item.description}</p>
         </div>
         <ShopButton variant="ghost" className="min-h-[40px] px-3 text-[14px]" onClick={sel.reset}>
-          <RotateCcw size={15} /> Reset to recipe
+          <RotateCcw size={15} /> {t("build.reset")}
         </ShopButton>
       </div>
 
@@ -81,13 +83,13 @@ export function Builder({ menu, item, edit }: { menu: ShopMenu; item: ShopItem; 
                 <legend className="sr-only">{groupTitle(g)}</legend>
                 <div className="mb-3 flex items-baseline justify-between gap-3">
                   <h2 className="text-[16px] font-bold">{groupTitle(g)}</h2>
-                  <span className="text-[13px] text-muted">{g.selection === "single" ? "Choose one" : g.max_select ? `Up to ${g.max_select} · ${count} chosen` : "Choose any"}</span>
+                  <span className="text-[13px] text-muted">{g.selection === "single" ? t("item.chooseOne") : g.max_select ? `${t("item.upTo", { n: g.max_select })} · ${t("item.chosen", { n: count })}` : t("item.optional")}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {g.modifiers.map((m) => {
                     const d = optionDelta(item, g, m.id);
                     const incl = g.selection === "multi" && item.default_modifier_ids.includes(m.id);
-                    return <Choice key={m.id} on={sel.mods.includes(m.id)} label={m.name} price={incl ? "Included" : d ? `+${rupee(d)}` : ""} radio={g.selection === "single"} onClick={() => sel.toggle(g, m.id)} />;
+                    return <Choice key={m.id} on={sel.mods.includes(m.id)} label={m.name} price={incl ? t("item.included") : d ? `+${rupee(d)}` : ""} radio={g.selection === "single"} onClick={() => sel.toggle(g, m.id)} />;
                   })}
                 </div>
               </fieldset>
@@ -96,29 +98,29 @@ export function Builder({ menu, item, edit }: { menu: ShopMenu; item: ShopItem; 
           {sel.limitHit && <p className="rounded-lg bg-warning-soft px-3 py-2 text-[13.5px] text-warning">{sel.limitHit}</p>}
           <label className="block rounded-xl border border-line bg-surface p-4">
             <span className="mb-1.5 block text-[16px] font-bold">
-              Note for the kitchen <span className="text-[14px] font-normal text-muted">(optional)</span>
+              {t("build.noteTitle")} <span className="text-[14px] font-normal text-muted">{t("item.optionalTag")}</span>
             </span>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={140} rows={2} className="field-input w-full resize-none" placeholder="Less sweet, nut allergy…" />
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={140} rows={2} className="field-input w-full resize-none" placeholder={t("build.notePh")} />
           </label>
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <section className="rounded-xl border border-line bg-surface">
-            <h2 className="border-b border-line px-4 py-3 text-[15px] font-bold">Summary</h2>
+            <h2 className="border-b border-line px-4 py-3 text-[15px] font-bold">{t("build.summary")}</h2>
             <dl className="divide-y divide-line text-[14px]">
               {sel.groups.map((g) => {
                 const chosen = g.modifiers.filter((m) => sel.mods.includes(m.id));
                 return (
                   <div key={g.id} className="flex justify-between gap-3 px-4 py-2.5">
                     <dt className="text-muted">{groupTitle(g)}</dt>
-                    <dd className="text-right font-semibold">{chosen.length ? chosen.map((c) => c.name).join(", ") : <span className="font-normal text-muted">None</span>}</dd>
+                    <dd className="text-right font-semibold">{chosen.length ? chosen.map((c) => c.name).join(", ") : <span className="font-normal text-muted">{t("build.none")}</span>}</dd>
                   </div>
                 );
               })}
             </dl>
             {nutrition && (
               <p className="border-t border-line px-4 py-2.5 text-[13px] text-muted">
-                Approx. <b className="num text-fg">{nutrition.kcal} kcal</b> · {nutrition.protein} g protein · {nutrition.fibre} g fibre (estimated)
+                {t("build.nutrition", { kcal: nutrition.kcal, protein: nutrition.protein, fibre: nutrition.fibre })}
               </p>
             )}
             <div className="hidden items-center gap-2 border-t border-line p-4 lg:flex">

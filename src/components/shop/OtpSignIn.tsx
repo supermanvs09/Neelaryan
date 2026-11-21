@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { useAccount } from "@/lib/shop/account";
 import { ShopButton } from "./ui";
+import { useT } from "@/lib/shop/i18n";
 
 type Step = "phone" | "code" | "profile";
 
@@ -22,6 +23,7 @@ async function post<T>(url: string, body: unknown): Promise<T> {
  */
 export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, compact }: { initialPhone?: string; initialName?: string; claim?: { order_id: string; access_token: string } | null; onDone?: (r: { claimed: { claimed: boolean; points: number } | null; isNew: boolean }) => void; compact?: boolean }) {
   const refresh = useAccount((s) => s.refresh);
+  const t = useT();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState(initialPhone.replace(/\D/g, "").slice(-10));
   const [challenge, setChallenge] = useState<{ id: string; sent_to: string; dev_code?: string } | null>(null);
@@ -108,7 +110,7 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
           }}
         >
           <label htmlFor="otp-phone" className="mb-1.5 block text-[14px] font-semibold">
-            Mobile number
+            {t("otp.mobile")}
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -116,17 +118,17 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
               <input id="otp-phone" inputMode="numeric" autoComplete="tel-national" maxLength={10} value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} className="field-input h-12 w-full pl-12 text-[16px]" placeholder="98765 43210" />
             </div>
             <ShopButton type="submit" loading={busy} disabled={phone.length !== 10}>
-              Get code
+              {t("otp.get")}
             </ShopButton>
           </div>
-          {!compact && <p className="mt-2 text-[12.5px] text-muted">We&apos;ll text you a 6-digit code. Standard SMS rates may apply.</p>}
+          {!compact && <p className="mt-2 text-[12.5px] text-muted">{t("otp.sms")}</p>}
         </form>
       )}
 
       {step === "code" && challenge && (
         <div>
           <label htmlFor="otp-code" className="mb-1.5 block text-[14px] font-semibold">
-            Enter the code sent to {challenge.sent_to}
+            {t("otp.enter", { to: challenge.sent_to })}
           </label>
           <input
             ref={codeRef}
@@ -145,19 +147,19 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
           />
           {challenge.dev_code && (
             <p className="mt-2 rounded-lg bg-warning-soft px-3 py-2 text-[12.5px] text-warning">
-              Development mode: SMS isn&apos;t set up, so the code is shown here — <b className="num">{challenge.dev_code}</b>. This never happens on the live site.
+              {t("otp.dev", { code: challenge.dev_code })}
             </p>
           )}
           <div className="mt-3 flex items-center justify-between text-[13.5px]">
             <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setStep("phone")}>
-              Change number
+              {t("otp.change")}
             </button>
             <button type="button" className="font-semibold text-primary hover:underline disabled:text-muted disabled:no-underline" disabled={cooldown > 0 || busy} onClick={send}>
-              {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
+              {cooldown > 0 ? t("otp.resendIn", { s: cooldown }) : t("otp.resend")}
             </button>
           </div>
           <ShopButton className="mt-3 w-full" loading={busy} disabled={code.length !== 6} onClick={() => verify()}>
-            Verify
+            {t("otp.verify")}
           </ShopButton>
         </div>
       )}
@@ -171,35 +173,35 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
           }}
         >
           <p className="flex items-center gap-1.5 text-[13.5px] font-semibold text-success">
-            <ShieldCheck size={16} aria-hidden /> Number verified. Just a few details:
+            <ShieldCheck size={16} aria-hidden /> {t("otp.verified")}
           </p>
           <label className="block">
-            <span className="mb-1.5 block text-[14px] font-semibold">Your name</span>
+            <span className="mb-1.5 block text-[14px] font-semibold">{t("otp.name")}</span>
             <input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoComplete="name" className="field-input h-12 w-full" />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-[14px] font-semibold">
-              Birthday <span className="font-normal text-muted">(optional — for a birthday treat)</span>
+              {t("otp.bday")}
             </span>
             <input type="date" value={dob} max={today} onChange={(e) => setDob(e.target.value)} className="field-input h-12 w-full" />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-[14px] font-semibold">
-              Email <span className="font-normal text-muted">(optional)</span>
+              {t("otp.email")}
             </span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="field-input h-12 w-full" />
           </label>
           <label className="flex items-start gap-3 rounded-xl border border-line p-3">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[rgb(var(--primary))]" />
             <span className="text-[13.5px]">
-              Send me offers and birthday wishes by SMS{email ? " or email" : ""}. <span className="text-muted">You can unsubscribe any time.</span>
+              {t("otp.consent")}
             </span>
           </label>
           <ShopButton type="submit" className="w-full" loading={busy} disabled={name.trim().length < 2}>
-            Join rewards
+            {t("otp.join")}
           </ShopButton>
           <p className="text-[12px] text-muted">
-            By joining you agree to our <Link href="/legal/terms" className="underline">terms and privacy policy</Link>.
+            <Link href="/legal/terms" className="underline">{t("otp.terms")}</Link>
           </p>
         </form>
       )}

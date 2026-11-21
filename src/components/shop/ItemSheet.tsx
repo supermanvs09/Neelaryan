@@ -10,6 +10,7 @@ import { DietMark, Sheet, ShopButton, Stepper, rupee, toast } from "./ui";
 import { ItemVisual } from "./ItemVisual";
 import { groupTitle, optionDelta, useSelection } from "./selection";
 import { clsx } from "@/lib/clsx";
+import { useT } from "@/lib/shop/i18n";
 
 interface SheetState {
   slug: string | null;
@@ -46,6 +47,7 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
   const [notes, setNotes] = useState(edit?.notes ?? "");
   const add = useShop((s) => s.add);
   const replace = useShop((s) => s.replace);
+  const t = useT();
   const p = sel.price(qty);
   const soldOut = item.status !== "available";
 
@@ -54,7 +56,7 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
     const line = { item_id: item.id, variant_id: sel.variant, modifier_ids: sel.mods, qty, notes: notes.trim() || undefined };
     if (edit) replace(edit.key, line);
     else add(line);
-    toast(edit ? "Updated" : `${qty} × ${item.name} added`);
+    toast(edit ? t("item.updated") : t("item.added", { qty, name: item.name }));
     onDone();
   };
 
@@ -70,12 +72,17 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
           <DietMark diet={item.diet} className="mt-1" />
           <p className="text-[14.5px] text-muted">{item.description}</p>
         </div>
+        {p.ok && p.offer && (
+          <p className="mt-3 inline-flex rounded-lg bg-success-soft px-2.5 py-1 text-[13px] font-semibold text-success">
+            {t("menu.off", { pct: p.offer.percent_off })} · {p.offer.title}
+          </p>
+        )}
       </div>
 
       <div className="space-y-6 px-5 py-5">
         {item.variants.length > 1 && (
           <fieldset>
-            <legend className="mb-2 text-[15px] font-bold">Size</legend>
+            <legend className="mb-2 text-[15px] font-bold">{t("item.size")}</legend>
             <div className="grid grid-cols-2 gap-2">
               {item.variants.map((v) => (
                 <Choice key={v.id} on={sel.variant === v.id} label={v.name} price={rupee(v.price)} onClick={() => sel.setVariant(v.id)} radio />
@@ -89,13 +96,13 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
             <fieldset key={g.id}>
               <legend className="mb-2 flex w-full items-baseline justify-between text-[15px] font-bold">
                 {groupTitle(g)}
-                <span className="text-[12.5px] font-normal text-muted">{g.selection === "single" ? "Choose one" : g.max_select ? `Up to ${g.max_select}${count ? ` · ${count} chosen` : ""}` : "Optional"}</span>
+                <span className="text-[12.5px] font-normal text-muted">{g.selection === "single" ? t("item.chooseOne") : g.max_select ? `${t("item.upTo", { n: g.max_select })}${count ? ` · ${t("item.chosen", { n: count })}` : ""}` : t("item.optional")}</span>
               </legend>
               <div className="grid grid-cols-2 gap-2">
                 {g.modifiers.map((m) => {
                   const d = optionDelta(item, g, m.id);
                   const incl = g.selection === "multi" && item.default_modifier_ids.includes(m.id);
-                  return <Choice key={m.id} on={sel.mods.includes(m.id)} label={m.name} price={incl ? "Included" : d ? `+${rupee(d)}` : ""} radio={g.selection === "single"} onClick={() => sel.toggle(g, m.id)} />;
+                  return <Choice key={m.id} on={sel.mods.includes(m.id)} label={m.name} price={incl ? t("item.included") : d ? `+${rupee(d)}` : ""} radio={g.selection === "single"} onClick={() => sel.toggle(g, m.id)} />;
                 })}
               </div>
             </fieldset>
@@ -104,16 +111,16 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
         {sel.limitHit && <p className="rounded-xl bg-warning-soft px-3 py-2 text-[13.5px] text-warning">{sel.limitHit}</p>}
         <label className="block">
           <span className="mb-1.5 block text-[15px] font-bold">
-            Anything we should know? <span className="font-normal text-muted">(optional)</span>
+            {t("item.note")} <span className="font-normal text-muted">{t("item.optionalTag")}</span>
           </span>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={140} rows={2} placeholder="Less spicy, no onion, extra hot…" className="field-input w-full resize-none" />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={140} rows={2} placeholder={t("item.notePh")} className="field-input w-full resize-none" />
         </label>
       </div>
 
       <div className="sticky bottom-0 mt-auto flex items-center gap-3 border-t border-line bg-surface px-5 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Stepper value={qty} onChange={(v) => setQty(Math.max(1, v))} min={1} max={50} label="quantity" />
         <ShopButton className="flex-1" onClick={submit} disabled={!p.ok || soldOut}>
-          {soldOut ? "Sold out right now" : !p.ok ? p.error : `${edit ? "Update" : "Add"} · ${rupee(p.lineTotal)}`}
+          {soldOut ? t("item.soldOutNow") : !p.ok ? p.error : t(edit ? "item.update" : "item.add", { price: rupee(p.lineTotal) })}
         </ShopButton>
       </div>
     </div>

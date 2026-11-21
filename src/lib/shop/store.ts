@@ -133,18 +133,20 @@ export interface PricedCartLine {
   detail: string;
   unit: number;
   total: number;
+  /** offer savings on this line (₹) */
+  saving: number;
 }
 
 /** Prices the cart against the live menu with the same rules the server uses. */
 export function priceCart(menu: ShopMenu | null, cart: CartLine[]) {
   const lines: PricedCartLine[] = cart.map((l) => {
-    if (!menu) return { line: l, ok: false, error: null, name: "…", detail: "", unit: 0, total: 0 };
+    if (!menu) return { line: l, ok: false, error: null, name: "…", detail: "", unit: 0, total: 0, saving: 0 };
     const p = priceLine(menu, { item_id: l.item_id, variant_id: l.variant_id, modifier_ids: l.modifier_ids, qty: l.qty });
-    if (!p.ok) return { line: l, ok: false, error: p.error, name: menu.items.find((i) => i.id === l.item_id)?.name ?? "Item no longer available", detail: "", unit: 0, total: 0 };
+    if (!p.ok) return { line: l, ok: false, error: p.error, name: menu.items.find((i) => i.id === l.item_id)?.name ?? "Item no longer available", detail: "", unit: 0, total: 0, saving: 0 };
     const item = menu.items.find((i) => i.id === l.item_id)!;
     const changed = p.modifiers.filter((m) => !item.default_modifier_ids.includes(m.id)).map((m) => m.name);
     const detail = [p.variant?.name, ...changed, ...p.removed.map((r) => `no ${r.toLowerCase()}`)].filter(Boolean).join(" · ");
-    return { line: l, ok: true, error: null, name: p.name, detail, unit: p.unitPrice, total: p.lineTotal };
+    return { line: l, ok: true, error: null, name: p.name, detail, unit: p.unitPrice, total: p.lineTotal, saving: p.discount * l.qty };
   });
   const subtotal = round2(lines.reduce((s, l) => s + l.total, 0));
   const count = cart.reduce((s, l) => s + l.qty, 0);
