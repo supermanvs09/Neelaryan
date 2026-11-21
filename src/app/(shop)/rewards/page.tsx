@@ -8,6 +8,7 @@ import { ShopButton, Spinner, rupee, toast } from "@/components/shop/ui";
 import { useAccount, type Account } from "@/lib/shop/account";
 import { useMenu } from "@/lib/shop/menu";
 import { clsx } from "@/lib/clsx";
+import { useT } from "@/lib/shop/i18n";
 
 interface Catalogue {
   enabled: boolean;
@@ -20,6 +21,7 @@ const KIND: Record<string, string> = { earn: "Earned", promo: "Bonus", adjust: "
 const date = (v: string) => new Date(v).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 export default function RewardsPage() {
+  const t = useT();
   const signedIn = useAccount((s) => s.signedIn);
   const account = useAccount((s) => s.data);
   const refresh = useAccount((s) => s.refresh);
@@ -45,7 +47,7 @@ export default function RewardsPage() {
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <Gift size={28} className="mx-auto text-muted" aria-hidden />
-        <p className="mt-3 text-[18px] font-semibold">Rewards are paused right now</p>
+        <p className="mt-3 text-[18px] font-semibold">{t("rw.paused")}</p>
       </div>
     );
 
@@ -67,19 +69,19 @@ export default function RewardsPage() {
 
   return (
     <div className="mx-auto max-w-[860px] space-y-6">
-      <h1 className="text-[26px] font-bold">Rewards</h1>
+      <h1 className="text-[26px] font-bold">{t("rw.title")}</h1>
 
       {account ? (
         <section className="grid gap-4 rounded-xl border border-line bg-surface p-5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
           <div>
-            <p className="text-[14px] text-muted">Your points</p>
+            <p className="text-[14px] text-muted">{t("rw.points")}</p>
             <p className="num text-[26px] font-bold">{balance.toLocaleString("en-IN")}</p>
             <p className="mt-1 text-[14px] text-muted">
-              Worth {rupee(account.points.value)} off your bill
+              {t("rw.worth", { value: rupee(account.points.value) })}
               {account.points.expiring && (
                 <span className="text-warning">
                   {" "}
-                  · {account.points.expiring.points} expire on {date(account.points.expiring.expires_at)}
+                  · {t("rw.expire", { points: account.points.expiring.points, date: date(account.points.expiring.expires_at) })}
                 </span>
               )}
             </p>
@@ -90,9 +92,9 @@ export default function RewardsPage() {
         </section>
       ) : (
         <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
-          <h2 className="text-[20px] font-bold">Join rewards</h2>
+          <h2 className="text-[20px] font-bold">{t("rw.join")}</h2>
           <p className="mt-1 max-w-lg text-[14.5px] text-muted">
-            Earn {cat.points_per_100 ?? loyalty?.points_per_100} points for every ₹100 and spend them on free drinks and treats. Sign in or join with your mobile number.
+            {t("rw.joinHint", { points: cat.points_per_100 ?? loyalty?.points_per_100 ?? 0 })}
           </p>
           <div className="mt-4 max-w-md">
             <OtpSignIn onDone={({ isNew }) => toast(isNew ? "Welcome to rewards!" : "Signed in")} />
@@ -102,18 +104,18 @@ export default function RewardsPage() {
 
       {issued && (
         <section className="rounded-xl border-2 border-accent bg-accent-soft p-5 text-center" aria-live="polite">
-          <p className="text-[14px] font-semibold text-accent-text">{issued.reward} is yours</p>
+          <p className="text-[14px] font-semibold text-accent-text">{t("rw.yours", { name: issued.reward })}</p>
           <p className="num my-2 text-[32px] font-bold tracking-widest">{issued.code}</p>
-          <p className="text-[13.5px] text-muted">Use it at checkout, or show this code to our team. Valid until {date(issued.expires_at)}.</p>
+          <p className="text-[13.5px] text-muted">{t("rw.useIt", { date: date(issued.expires_at) })}</p>
           <ShopButton variant="secondary" className="mt-3" onClick={() => navigator.clipboard?.writeText(issued.code).then(() => toast("Code copied"), () => undefined)}>
-            <Copy size={16} /> Copy code
+            <Copy size={16} /> {t("rw.copy")}
           </ShopButton>
         </section>
       )}
 
       {open.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[18px] font-bold">Ready to use</h2>
+          <h2 className="mb-2 text-[18px] font-bold">{t("rw.ready")}</h2>
           <ul className="space-y-2">
             {open.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
@@ -121,7 +123,7 @@ export default function RewardsPage() {
                   <Ticket size={20} className="text-accent-text" aria-hidden />
                   <span>
                     <span className="block font-semibold">{r.name}</span>
-                    <span className="block text-[12.5px] text-muted">Valid until {date(r.expires_at)}</span>
+                    <span className="block text-[12.5px] text-muted">{t("rw.validUntil", { date: date(r.expires_at) })}</span>
                   </span>
                 </span>
                 <span className="num rounded-lg bg-surface-2 px-2.5 py-1 font-bold tracking-wider">{r.code}</span>
@@ -132,7 +134,7 @@ export default function RewardsPage() {
       )}
 
       <section>
-        <h2 className="mb-2 text-[18px] font-bold">Rewards</h2>
+        <h2 className="mb-2 text-[18px] font-bold">{t("rw.catalogue")}</h2>
         {!cat.rewards.length ? (
           <p className="rounded-xl border border-line bg-surface p-5 text-muted">New rewards are on the way.</p>
         ) : (
@@ -155,17 +157,17 @@ export default function RewardsPage() {
                   {account && (
                     <div className="mt-auto pt-3">
                       {out ? (
-                        <span className="text-[13.5px] font-semibold text-muted">All gone</span>
+                        <span className="text-[13.5px] font-semibold text-muted">{t("rw.gone")}</span>
                       ) : short > 0 ? (
                         <div>
                           <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
                             <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (balance / r.points_cost) * 100)}%` }} />
                           </div>
-                          <p className="mt-1.5 text-[12.5px] text-muted">{short.toLocaleString("en-IN")} more points to go</p>
+                          <p className="mt-1.5 text-[12.5px] text-muted">{t("rw.more", { n: short.toLocaleString("en-IN") })}</p>
                         </div>
                       ) : (
                         <ShopButton className="min-h-[42px] w-full" loading={busy === r.id} onClick={() => redeem(r.id)}>
-                          Redeem
+                          {t("rw.redeem")}
                         </ShopButton>
                       )}
                     </div>
@@ -179,7 +181,7 @@ export default function RewardsPage() {
 
       {account && account.history.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[18px] font-bold">Points history</h2>
+          <h2 className="mb-2 text-[18px] font-bold">{t("rw.history")}</h2>
           <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
             {account.history.map((h, i) => (
               <li key={i} className="flex items-center justify-between gap-3 px-4 py-3 text-[14px]">

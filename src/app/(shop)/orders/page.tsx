@@ -7,6 +7,7 @@ import { Spinner, rupee } from "@/components/shop/ui";
 import { useShop, useShopHydrated } from "@/lib/shop/store";
 import { useAccount } from "@/lib/shop/account";
 import { clsx } from "@/lib/clsx";
+import { useT, type MessageKey } from "@/lib/shop/i18n";
 
 interface Row {
   id: string;
@@ -19,10 +20,10 @@ interface Row {
   items: string;
 }
 
-const LABEL: Record<string, string> = { new: "Waiting to confirm", accepted: "Confirmed", preparing: "Being prepared", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled", rejected: "Not accepted" };
 const LIVE = new Set(["new", "accepted", "preparing", "ready", "served"]);
 
 export default function OrdersPage() {
+  const t = useT();
   const hydrated = useShopHydrated();
   const mine = useShop((s) => s.orders);
   const account = useAccount((s) => s.data);
@@ -58,7 +59,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-[720px]">
-      <h1 className="text-[26px] font-bold">Your orders</h1>
+      <h1 className="text-[26px] font-bold">{t("ord.title")}</h1>
       {loading ? (
         <div className="grid place-items-center py-20 text-muted">
           <Spinner />
@@ -66,15 +67,15 @@ export default function OrdersPage() {
       ) : !rows.length ? (
         <div className="py-16 text-center">
           <ReceiptText size={28} className="mx-auto text-muted" aria-hidden />
-          <p className="mt-3 text-[17px] font-semibold">No orders yet</p>
-          <p className="mt-1 text-muted">{signedIn ? "Orders you place will show here." : "Orders placed on this phone show here. Sign in to see orders from other devices."}</p>
+          <p className="mt-3 text-[17px] font-semibold">{t("ord.none")}</p>
+          <p className="mt-1 text-muted">{signedIn ? t("ord.noneSigned") : t("ord.noneHint")}</p>
           <div className="mt-5 flex justify-center gap-3">
             <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
-              Browse the menu
+              {t("home.view")}
             </Link>
             {!signedIn && (
               <Link href="/account?next=/orders" className="inline-flex min-h-[48px] items-center rounded-lg border border-line px-6 font-semibold">
-                Sign in
+                {t("ord.signIn")}
               </Link>
             )}
           </div>
@@ -87,11 +88,11 @@ export default function OrdersPage() {
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="num font-bold">#{o.number}</span>
-                    <span className={clsx("rounded-full px-2.5 py-0.5 text-[12px] font-semibold", LIVE.has(o.status) ? "bg-primary-soft text-fg" : o.status === "completed" ? "bg-success-soft text-success" : "bg-surface-2 text-muted")}>{LABEL[o.status] ?? o.status}</span>
+                    <span className={clsx("rounded-full px-2.5 py-0.5 text-[12px] font-semibold", LIVE.has(o.status) ? "bg-primary-soft text-fg" : o.status === "completed" ? "bg-success-soft text-success" : "bg-surface-2 text-muted")}>{t(`st.${o.status}` as MessageKey)}</span>
                   </p>
                   <p className="mt-1 truncate text-[13.5px] text-muted">{o.items}</p>
                   <p className="mt-0.5 text-[12.5px] text-muted">
-                    {new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · {o.type === "dine_in" ? `Table ${o.table_label ?? ""}` : "Takeaway"}
+                    {new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · {o.type === "dine_in" ? t("ctx.table", { table: o.table_label ?? "" }) : t("ctx.takeaway")}
                   </p>
                 </div>
                 <span className="num font-semibold">{rupee(o.total)}</span>
