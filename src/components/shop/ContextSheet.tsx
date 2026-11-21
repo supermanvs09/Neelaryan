@@ -23,7 +23,7 @@ export function ContextSheet() {
   return (
     <Sheet open={open} onClose={() => set(false)} title="How are you ordering?">
       <div className="space-y-3 p-5">
-        <div className={clsx("rounded-2xl border p-4", mode === "dine_in" && table ? "border-primary bg-primary-soft" : "border-line")}>
+        <div className={clsx("rounded-xl border p-4", mode === "dine_in" && table ? "border-primary bg-primary-soft" : "border-line")}>
           <p className="flex items-center gap-2 font-semibold">
             <QrCode size={18} aria-hidden /> At a table
           </p>
@@ -50,7 +50,7 @@ export function ContextSheet() {
             set(false);
             toast("Ordering for takeaway");
           }}
-          className={clsx("w-full rounded-2xl border p-4 text-left disabled:opacity-55", mode === "takeaway" ? "border-primary bg-primary-soft" : "border-line hover:border-line-strong")}
+          className={clsx("w-full rounded-xl border p-4 text-left disabled:opacity-55", mode === "takeaway" ? "border-primary bg-primary-soft" : "border-line hover:border-line-strong")}
         >
           <p className="flex items-center gap-2 font-semibold">
             <ShoppingBag size={18} aria-hidden /> Takeaway

@@ -90,7 +90,7 @@ function Inner() {
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-[20px] font-bold">We can&apos;t show this order</p>
         <p className="mt-1 text-muted">Orders can be viewed on the phone they were placed from, or after signing in.</p>
-        <Link href="/orders" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
+        <Link href="/orders" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
           Your orders
         </Link>
       </div>
@@ -157,7 +157,7 @@ function Tracking({ order, token, placed, reload }: { order: PublicOrder; token:
       <Link href="/orders" className="inline-flex h-10 items-center gap-1.5 pr-3 text-[14px] font-semibold text-muted hover:text-fg">
         <ArrowLeft size={17} aria-hidden /> Your orders
       </Link>
-      <section className={clsx("mt-1 rounded-3xl border p-5 md:p-7", stopped ? "border-danger/40 bg-danger-soft" : "border-line bg-surface")} aria-live="polite">
+      <section className={clsx("mt-1 rounded-xl border p-5 md:p-7", stopped ? "border-danger/40 bg-danger-soft" : "border-line bg-surface")} aria-live="polite">
         <p className="text-[13px] font-semibold text-muted">
           Order <span className="num">#{order.number}</span> · {order.type === "dine_in" ? `Table ${order.table_label}` : "Takeaway"} · {time(order.created_at)}
         </p>
@@ -193,7 +193,7 @@ function Tracking({ order, token, placed, reload }: { order: PublicOrder; token:
       {/* loyalty invite: after ordering, for guests who aren't signed in */}
       {loyalty?.enabled && !stopped && !order.linked && !account && <JoinCard order={order} token={token} placed={placed} onJoined={reload} points={Math.floor(((order.subtotal - order.discount) / 100) * loyalty.points_per_100)} minOrder={loyalty.min_order_amount} />}
       {account && order.linked && (
-        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-accent-soft px-4 py-3 text-[14px] text-accent-text">
+        <p className="mt-4 flex items-center gap-2 rounded-xl bg-accent-soft px-4 py-3 text-[14px] text-accent-text">
           <Gift size={17} aria-hidden />
           {order.points_earned ? (
             <>
@@ -207,7 +207,7 @@ function Tracking({ order, token, placed, reload }: { order: PublicOrder; token:
         </p>
       )}
 
-      <section className="mt-4 rounded-3xl border border-line bg-surface">
+      <section className="mt-4 rounded-xl border border-line bg-surface">
         <h2 className="border-b border-line px-5 py-3.5 text-[16px] font-bold">What you ordered</h2>
         <ul className="divide-y divide-line px-5">
           {order.items.map((i, k) => (
@@ -255,7 +255,7 @@ function Tracking({ order, token, placed, reload }: { order: PublicOrder; token:
         </dl>
       </section>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Link href="/menu" className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-line px-6 font-semibold hover:border-line-strong">
+        <Link href="/menu" className="inline-flex min-h-[48px] items-center gap-2 rounded-lg border border-line px-6 font-semibold hover:border-line-strong">
           {order.type === "dine_in" ? <QrCode size={17} aria-hidden /> : <ShoppingBag size={17} aria-hidden />} Order something else
         </Link>
       </div>
@@ -268,12 +268,12 @@ function JoinCard({ order, token, placed, onJoined, points, minOrder }: { order:
   const [done, setDone] = useState<string | null>(null);
   if (done)
     return (
-      <p className="mt-4 flex items-center gap-2 rounded-2xl bg-success-soft px-4 py-3 text-[14px] font-semibold text-success">
+      <p className="mt-4 flex items-center gap-2 rounded-xl bg-success-soft px-4 py-3 text-[14px] font-semibold text-success">
         <Check size={17} aria-hidden /> {done}
       </p>
     );
   return (
-    <section className="mt-4 rounded-3xl border border-line bg-surface p-5">
+    <section className="mt-4 rounded-xl border border-line bg-surface p-5">
       <div className="flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent-text">
           <Gift size={19} aria-hidden />

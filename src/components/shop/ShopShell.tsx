@@ -71,7 +71,7 @@ function ContextChip({ hydrated }: { hydrated: boolean }) {
   const open = useContextSheet((s) => s.set);
   if (!hydrated) return null;
   return (
-    <button type="button" onClick={() => open(true)} className="inline-flex h-10 max-w-[44vw] items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-[13.5px] font-semibold hover:border-line-strong">
+    <button type="button" onClick={() => open(true)} className="inline-flex h-10 max-w-[44vw] items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 text-[13.5px] font-semibold hover:border-line-strong">
       {mode === "dine_in" && table ? (
         <>
           <QrCode size={15} aria-hidden /> <span className="truncate">Table {table.label}</span>
@@ -103,12 +103,12 @@ function Header({ hydrated }: { hydrated: boolean }) {
   return (
     <header className={clsx("sticky top-0 z-40 border-b bg-bg/95 transition-colors", scrolled ? "border-line" : "border-transparent")}>
       <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center gap-3 px-4 md:h-[72px] md:px-8">
-        <Link href="/" className="shrink-0 rounded-lg text-[28px] md:text-[34px]" aria-label={`${menu?.business.name ?? "NEELARYAN Café"} — home`}>
-          <Wordmark tagline={false} />
+        <Link href="/" className="shrink-0 rounded-lg" aria-label={`${menu?.business.name ?? "NEELARYAN Café"} — home`}>
+          <Wordmark compact name={(menu?.business.name ?? "NEELARYAN Café").toUpperCase()} />
         </Link>
         <nav className="ml-6 hidden items-center gap-1 md:flex" aria-label="Main">
           {NAV.slice(1).map((n) => (
-            <Link key={n.href} href={n.href} aria-current={active(pathname, n.href) ? "page" : undefined} className={clsx("rounded-full px-4 py-2 text-[15px] font-semibold transition-colors", active(pathname, n.href) ? "bg-primary-soft text-fg" : "text-muted hover:text-fg")}>
+            <Link key={n.href} href={n.href} aria-current={active(pathname, n.href) ? "page" : undefined} className={clsx("rounded-lg px-4 py-2 text-[15px] font-semibold transition-colors", active(pathname, n.href) ? "bg-primary-soft text-fg" : "text-muted hover:text-fg")}>
               {n.label}
             </Link>
           ))}
@@ -118,7 +118,7 @@ function Header({ hydrated }: { hydrated: boolean }) {
           <div className="hidden lg:block">
             <ThemeSwitch compact />
           </div>
-          <button type="button" onClick={() => openCart(true)} className="relative grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-fg hover:bg-primary-hover" aria-label={`Your order, ${count} item${count === 1 ? "" : "s"}`}>
+          <button type="button" onClick={() => openCart(true)} className="relative grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-fg hover:bg-primary-hover" aria-label={`Your order, ${count} item${count === 1 ? "" : "s"}`}>
             <ShoppingBag size={19} />
             {count > 0 && <span className="num absolute -right-1 -top-1 grid h-[22px] min-w-[22px] place-items-center rounded-full bg-accent px-1 text-[12px] font-bold text-accent-fg ring-2 ring-bg">{count}</span>}
           </button>
@@ -149,7 +149,7 @@ function BottomBar({ hydrated }: { hydrated: boolean }) {
     <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
       {count > 0 && (
         <div className="px-3 pb-2">
-          <button type="button" onClick={() => openCart(true)} className="flex h-14 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-left text-primary-fg shadow-lift">
+          <button type="button" onClick={() => openCart(true)} className="flex h-14 w-full items-center gap-3 rounded-xl bg-primary px-4 text-left text-primary-fg shadow-lift">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-fg">
               <ShoppingBag size={17} />
             </span>

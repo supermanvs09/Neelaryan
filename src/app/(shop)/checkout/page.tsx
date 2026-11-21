@@ -88,7 +88,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
       <div className="mx-auto max-w-md py-24 text-center">
         <ShoppingBag size={30} className="mx-auto text-muted" aria-hidden />
         <p className="mt-3 text-[20px] font-bold">Your order is empty</p>
-        <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
+        <Link href="/menu" className="mt-5 inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
           Browse the menu
         </Link>
       </div>
@@ -153,12 +153,12 @@ function Checkout({ menu }: { menu: ShopMenu }) {
       <Link href="/menu" className="inline-flex h-10 items-center gap-1.5 pr-3 text-[14px] font-semibold text-muted hover:text-fg">
         <ArrowLeft size={17} aria-hidden /> Keep browsing
       </Link>
-      <h1 className="mt-1 font-display text-[34px] font-semibold">Checkout</h1>
+      <h1 className="mt-1 text-[26px] font-bold">Checkout</h1>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           {/* where */}
-          <section className="rounded-3xl border border-line bg-surface p-5">
+          <section className="rounded-xl border border-line bg-surface p-5">
             <h2 className="text-[17px] font-bold">Where</h2>
             {needsContext ? (
               <div className="mt-2">
@@ -188,7 +188,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
           </section>
 
           {/* who */}
-          <section className="rounded-3xl border border-line bg-surface p-5">
+          <section className="rounded-xl border border-line bg-surface p-5">
             <h2 className="text-[17px] font-bold">Your details</h2>
             <p className="mt-0.5 text-[13.5px] text-muted">So we can call your name and reach you about this order.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -215,7 +215,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
 
           {/* rewards */}
           {menu.loyalty.enabled && (
-            <section className="rounded-3xl border border-line bg-surface p-5">
+            <section className="rounded-xl border border-line bg-surface p-5">
               <h2 className="flex items-center gap-2 text-[17px] font-bold">
                 <Gift size={18} aria-hidden /> Rewards
               </h2>
@@ -229,7 +229,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
               ) : (
                 <div className="mt-2 space-y-3">
                   {quote?.points && quote.points.balance > 0 && (
-                    <label className={clsx("flex items-start gap-3 rounded-2xl border p-3", quote.points.max >= quote.points.min ? "border-line" : "border-line opacity-60")}>
+                    <label className={clsx("flex items-start gap-3 rounded-xl border p-3", quote.points.max >= quote.points.min ? "border-line" : "border-line opacity-60")}>
                       <input type="checkbox" className="mt-0.5 h-5 w-5 accent-[rgb(var(--primary))]" checked={usePoints} disabled={quote.points.max < quote.points.min} onChange={(e) => setUsePoints(e.target.checked)} />
                       <span className="text-[14px]">
                         {quote.points.max >= quote.points.min ? (
@@ -244,7 +244,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
                     </label>
                   )}
                   {rewardCode ? (
-                    <div className="flex items-center justify-between gap-2 rounded-2xl border border-primary bg-primary-soft px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-primary bg-primary-soft px-3 py-2.5">
                       <span className="flex items-center gap-2 text-[14px] font-semibold">
                         <Ticket size={16} aria-hidden /> {quote?.reward?.label ?? rewardCode}
                         {quote?.reward && <span className="num font-normal text-muted">−{rupee(quote.reward.discount)}</span>}
@@ -286,7 +286,7 @@ function Checkout({ menu }: { menu: ShopMenu }) {
 
         {/* summary */}
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <section className="rounded-3xl border border-line bg-surface">
+          <section className="rounded-xl border border-line bg-surface">
             <h2 className="border-b border-line px-5 py-3.5 text-[17px] font-bold">
               Your order · {count} item{count === 1 ? "" : "s"}
             </h2>

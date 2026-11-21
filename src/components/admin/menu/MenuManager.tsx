@@ -6,8 +6,7 @@ import { Badge, Button, Card, DataTable, Empty, ErrorBlock, IconButton, Input, L
 import { useCan } from "../AdminShell";
 import { apiFetch, useApi, type ClientApiError } from "@/lib/api-client";
 import { money, pct, plural } from "@/lib/format";
-import { FoodArt } from "@/components/food/FoodArt";
-import type { ArtKind } from "@/data/menu";
+import { ProductImage, kindOf } from "@/components/ProductImage";
 import { clsx } from "@/lib/clsx";
 import { ItemEditor } from "./ItemEditor";
 import { GroupEditor } from "./GroupEditor";
@@ -140,8 +139,8 @@ function Items({ menu, reload, manage }: { menu: AdminMenu; reload: () => Promis
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={i.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />
                 ) : (
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-surface-2">
-                    <FoodArt kind={(i.visual === "bowl" ? "oats" : i.visual === "glass" ? "shake" : i.art_kind) as ArtKind} tint={[i.tint[0] ?? "#c98f5a", i.tint[1] ?? "#e9cfa8"]} className="h-8 w-8" />
+                  <span className="h-10 w-10 shrink-0 overflow-hidden rounded-md">
+                    <ProductImage image={null} kind={kindOf(i)} name={i.name} iconSize={18} />
                   </span>
                 )}
                 <span className="min-w-0">

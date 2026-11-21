@@ -52,7 +52,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
       <Link href="/profile" className="text-[14px] font-semibold text-gold-700 hover:underline">
         ← Back
       </Link>
-      <h1 className="mt-3 font-display text-[42px] font-semibold leading-tight text-navy-900">{page.title}</h1>
+      <h1 className="mt-3 text-[26px] font-bold text-navy-900">{page.title}</h1>
       <div className="mt-6 space-y-5 text-[15.5px] leading-relaxed text-ink-soft">
         {page.body.map((b, i) => (
           <section key={i}>

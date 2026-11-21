@@ -67,13 +67,13 @@ export default function RewardsPage() {
 
   return (
     <div className="mx-auto max-w-[860px] space-y-6">
-      <h1 className="font-display text-[34px] font-semibold">Rewards</h1>
+      <h1 className="text-[26px] font-bold">Rewards</h1>
 
       {account ? (
-        <section className="grid gap-4 rounded-3xl border border-line bg-surface p-5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
+        <section className="grid gap-4 rounded-xl border border-line bg-surface p-5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
           <div>
             <p className="text-[14px] text-muted">Your points</p>
-            <p className="num font-display text-[52px] font-semibold leading-none">{balance.toLocaleString("en-IN")}</p>
+            <p className="num text-[26px] font-bold">{balance.toLocaleString("en-IN")}</p>
             <p className="mt-1 text-[14px] text-muted">
               Worth {rupee(account.points.value)} off your bill
               {account.points.expiring && (
@@ -89,7 +89,7 @@ export default function RewardsPage() {
           </p>
         </section>
       ) : (
-        <section className="rounded-3xl border border-line bg-surface p-5 md:p-7">
+        <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
           <h2 className="text-[20px] font-bold">Join rewards</h2>
           <p className="mt-1 max-w-lg text-[14.5px] text-muted">
             Earn {cat.points_per_100 ?? loyalty?.points_per_100} points for every ₹100 and spend them on free drinks and treats. Sign in or join with your mobile number.
@@ -101,7 +101,7 @@ export default function RewardsPage() {
       )}
 
       {issued && (
-        <section className="rounded-3xl border-2 border-accent bg-accent-soft p-5 text-center" aria-live="polite">
+        <section className="rounded-xl border-2 border-accent bg-accent-soft p-5 text-center" aria-live="polite">
           <p className="text-[14px] font-semibold text-accent-text">{issued.reward} is yours</p>
           <p className="num my-2 text-[32px] font-bold tracking-widest">{issued.code}</p>
           <p className="text-[13.5px] text-muted">Use it at checkout, or show this code to our team. Valid until {date(issued.expires_at)}.</p>
@@ -116,7 +116,7 @@ export default function RewardsPage() {
           <h2 className="mb-2 text-[18px] font-bold">Ready to use</h2>
           <ul className="space-y-2">
             {open.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4">
+              <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
                 <span className="flex items-center gap-3">
                   <Ticket size={20} className="text-accent-text" aria-hidden />
                   <span>
@@ -134,14 +134,14 @@ export default function RewardsPage() {
       <section>
         <h2 className="mb-2 text-[18px] font-bold">Rewards</h2>
         {!cat.rewards.length ? (
-          <p className="rounded-2xl border border-line bg-surface p-5 text-muted">New rewards are on the way.</p>
+          <p className="rounded-xl border border-line bg-surface p-5 text-muted">New rewards are on the way.</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {cat.rewards.map((r) => {
               const short = Math.max(0, r.points_cost - balance);
               const out = r.left === 0;
               return (
-                <li key={r.id} className="flex flex-col rounded-2xl border border-line bg-surface p-4">
+                <li key={r.id} className="flex flex-col rounded-xl border border-line bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-bold">{r.name}</p>
                     <span className="num shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 text-[13px] font-bold text-accent-text">{r.points_cost.toLocaleString("en-IN")} pts</span>
@@ -180,7 +180,7 @@ export default function RewardsPage() {
       {account && account.history.length > 0 && (
         <section>
           <h2 className="mb-2 text-[18px] font-bold">Points history</h2>
-          <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
             {account.history.map((h, i) => (
               <li key={i} className="flex items-center justify-between gap-3 px-4 py-3 text-[14px]">
                 <span>

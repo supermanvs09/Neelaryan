@@ -104,7 +104,7 @@ export function AdminShell({ user, businessName, children }: { user: ShellUser; 
 
   const brand = (
     <div className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-4">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#b58a45] font-display text-[19px] font-semibold italic text-[#23324c]">N</span>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#b58a45] text-[17px] font-bold text-[#23324c]">N</span>
       {!collapsed && (
         <span className="min-w-0">
           <span className="block truncate text-[14px] font-bold text-[#fff]">{businessName}</span>

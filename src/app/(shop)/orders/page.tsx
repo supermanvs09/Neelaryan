@@ -58,7 +58,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-[720px]">
-      <h1 className="font-display text-[34px] font-semibold">Your orders</h1>
+      <h1 className="text-[26px] font-bold">Your orders</h1>
       {loading ? (
         <div className="grid place-items-center py-20 text-muted">
           <Spinner />
@@ -69,11 +69,11 @@ export default function OrdersPage() {
           <p className="mt-3 text-[17px] font-semibold">No orders yet</p>
           <p className="mt-1 text-muted">{signedIn ? "Orders you place will show here." : "Orders placed on this phone show here. Sign in to see orders from other devices."}</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
+            <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-lg bg-primary px-6 font-semibold text-primary-fg">
               Browse the menu
             </Link>
             {!signedIn && (
-              <Link href="/account?next=/orders" className="inline-flex min-h-[48px] items-center rounded-full border border-line px-6 font-semibold">
+              <Link href="/account?next=/orders" className="inline-flex min-h-[48px] items-center rounded-lg border border-line px-6 font-semibold">
                 Sign in
               </Link>
             )}
@@ -83,7 +83,7 @@ export default function OrdersPage() {
         <ul className="mt-4 space-y-2.5">
           {rows.map((o) => (
             <li key={o.id}>
-              <Link href={`/orders/${o.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-line-strong">
+              <Link href={`/orders/${o.id}`} className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 hover:border-line-strong">
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="num font-bold">#{o.number}</span>

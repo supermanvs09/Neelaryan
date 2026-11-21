@@ -33,7 +33,7 @@ export default async function PrintQrPage() {
       <div className="grid grid-cols-2 gap-[8mm]">
         {cards.map((t) => (
           <div key={t.id} className="flex break-inside-avoid flex-col items-center rounded-[4mm] border-2 border-[#B58A45] p-[6mm] text-center" style={{ height: "88mm" }}>
-            <p className="font-display text-[22px] font-semibold leading-none">{business.name}</p>
+            <p className="text-[20px] font-bold leading-none">{business.name}</p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7E5E28]">Scan to order</p>
             <div className="my-[3mm] h-[46mm] w-[46mm]" dangerouslySetInnerHTML={{ __html: t.svg }} />
             <p className="text-[12px]">Table</p>

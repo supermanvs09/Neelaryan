@@ -30,9 +30,9 @@ function Inner() {
     );
   return (
     <div className="mx-auto max-w-[620px] space-y-6">
-      <h1 className="font-display text-[34px] font-semibold">Account</h1>
+      <h1 className="text-[26px] font-bold">Account</h1>
       {!data ? (
-        <section className="rounded-3xl border border-line bg-surface p-5 md:p-7">
+        <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
           <h2 className="text-[18px] font-bold">Sign in or join</h2>
           <p className="mt-1 text-[14.5px] text-muted">Collect points, see your orders on any device, and get a birthday treat. No password — just a code to your phone.</p>
           <div className="mt-4">
@@ -47,7 +47,7 @@ function Inner() {
       ) : (
         <Profile a={data} />
       )}
-      <section className="rounded-3xl border border-line bg-surface p-5">
+      <section className="rounded-xl border border-line bg-surface p-5">
         <h2 className="text-[16px] font-bold">Appearance</h2>
         <div className="mt-3">
           <ThemeSwitch />
@@ -85,7 +85,7 @@ function Profile({ a }: { a: Account }) {
     }
   };
   return (
-    <section className="rounded-3xl border border-line bg-surface p-5 md:p-7">
+    <section className="rounded-xl border border-line bg-surface p-5 md:p-7">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[20px] font-bold">{c.name}</p>
@@ -127,7 +127,7 @@ function Profile({ a }: { a: Account }) {
           <span className="mt-1 block text-[12px] text-muted">{c.dob ? "To change it, please ask our team." : "Set once — it's how we know when to send your birthday treat."}</span>
         </label>
       </div>
-      <label className="mt-4 flex items-start gap-3 rounded-2xl border border-line p-3">
+      <label className="mt-4 flex items-start gap-3 rounded-xl border border-line p-3">
         <input type="checkbox" className="mt-0.5 h-5 w-5 accent-[rgb(var(--primary))]" checked={f.marketing_consent} onChange={(e) => setF({ ...f, marketing_consent: e.target.checked })} />
         <span className="text-[14px]">
           Send me offers and birthday wishes <span className="block text-[12.5px] text-muted">By SMS{f.email ? " or email" : ""}. Turn off any time.</span>

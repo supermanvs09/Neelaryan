@@ -189,7 +189,7 @@ export function OtpSignIn({ initialPhone = "", initialName = "", claim, onDone, 
             </span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="field-input h-12 w-full" />
           </label>
-          <label className="flex items-start gap-3 rounded-2xl border border-line p-3">
+          <label className="flex items-start gap-3 rounded-xl border border-line p-3">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[rgb(var(--primary))]" />
             <span className="text-[13.5px]">
               Send me offers and birthday wishes by SMS{email ? " or email" : ""}. <span className="text-muted">You can unsubscribe any time.</span>

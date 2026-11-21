@@ -9,7 +9,7 @@ export function AuthFrame({ title, subtitle, children }: { title: string; subtit
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="flex items-center justify-between px-5 py-4 md:px-8">
         <Link href="/" className="text-[30px]" aria-label="NEELARYAN — customer site">
-          <Wordmark tagline={false} />
+          <Wordmark sub="Staff console" />
         </Link>
         <ThemeSwitch compact />
       </header>

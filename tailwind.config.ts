@@ -51,7 +51,7 @@ const config: Config = {
         egg: v("egg"),
       },
       fontFamily: {
-        display: ["var(--font-display)", "Georgia", "serif"],
+        display: ["var(--font-sans)", "system-ui", "sans-serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       boxShadow: {
@@ -63,25 +63,6 @@ const config: Config = {
       },
       borderRadius: {
         "4xl": "2rem",
-      },
-      keyframes: {
-        sway: {
-          "0%, 100%": { transform: "translate3d(0,0,0) rotate(0deg)" },
-          "50%": { transform: "translate3d(12px,-6px,0) rotate(1.5deg)" },
-        },
-        pulseRing: {
-          "0%": { transform: "scale(0.9)", opacity: "0.7" },
-          "100%": { transform: "scale(1.8)", opacity: "0" },
-        },
-        skeleton: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-      },
-      animation: {
-        sway: "sway 14s ease-in-out infinite",
-        "pulse-ring": "pulseRing 1.6s ease-out infinite",
-        skeleton: "skeleton 1.6s linear infinite",
       },
     },
   },

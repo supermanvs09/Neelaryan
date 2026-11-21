@@ -75,7 +75,7 @@ export function CategoryEditor({ category, onClose, onSaved }: { category: Admin
         <Field label="Short note" htmlFor="c-desc" optional hint="Shown under the category heading on the menu.">
           <Textarea id="c-desc" rows={2} value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} />
         </Field>
-        <Field label="Illustration" htmlFor="c-art" hint="Used for items without a photo.">
+        <Field label="Icon" htmlFor="c-art" hint="Shown for items in this category that have no photo.">
           <Select id="c-art" value={art} onChange={(e) => setArt(e.target.value)}>
             {ARTS.map((a) => (
               <option key={a} value={a}>

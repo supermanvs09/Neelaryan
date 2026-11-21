@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { defaultSelection, fromPrice, isBuilder, useMenu, visualKeys, type ShopItem, type ShopMenu } from "@/lib/shop/menu";
+import { defaultSelection, fromPrice, isBuilder, useMenu, type ShopItem, type ShopMenu } from "@/lib/shop/menu";
 import { useShop } from "@/lib/shop/store";
 import { DietMark, ShopButton, Spinner, rupee, toast } from "./ui";
 import { ItemVisual } from "./ItemVisual";
@@ -13,7 +13,6 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
   const add = useShop((s) => s.add);
   const soldOut = item.status !== "available";
   const configurable = isBuilder(item) || item.variants.length > 1 || item.group_ids.length > 0;
-  const keys = isBuilder(item) ? visualKeys(menu, item, defaultSelection(menu, item).modifier_ids) : undefined;
 
   const quickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,17 +31,17 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
   const button = soldOut ? (
     <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-muted">Sold out</span>
   ) : (
-    <button type="button" onClick={quickAdd} className="inline-flex h-9 items-center gap-1 rounded-full border border-primary px-3.5 text-[13.5px] font-semibold text-primary hover:bg-primary hover:text-primary-fg" aria-label={`${configurable ? "Choose options for" : "Add"} ${item.name}`}>
+    <button type="button" onClick={quickAdd} className="inline-flex h-9 items-center gap-1 rounded-lg border border-primary px-3.5 text-[13.5px] font-semibold text-primary hover:bg-primary hover:text-primary-fg" aria-label={`${configurable ? "Choose options for" : "Add"} ${item.name}`}>
       <Plus size={15} aria-hidden /> {isBuilder(item) ? "Build" : "Add"}
     </button>
   );
 
   if (layout === "tile") {
     return (
-      <article className={clsx("group flex flex-col overflow-hidden rounded-3xl border border-line bg-surface transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
+      <article className={clsx("group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
         <button type="button" onClick={() => open(item)} className="block text-left" aria-label={`${item.name}, ${rupee(fromPrice(item))}`}>
-          <div className="aspect-[5/4] bg-surface-2">
-            <ItemVisual item={item} keys={keys} className="h-full w-full p-3" />
+          <div className="aspect-[16/9] bg-surface-2">
+            <ItemVisual item={item} iconSize={36} />
           </div>
         </button>
         <div className="flex flex-1 flex-col p-4">
@@ -60,10 +59,10 @@ export function ItemCard({ menu, item, layout = "row" }: { menu: ShopMenu; item:
     );
   }
   return (
-    <article className={clsx("flex gap-3 rounded-2xl border border-line bg-surface p-3 transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
+    <article className={clsx("flex gap-3 rounded-xl border border-line bg-surface p-3 transition-colors hover:border-line-strong", soldOut && "opacity-70")}>
       <button type="button" onClick={() => open(item)} className="flex min-w-0 flex-1 gap-3 text-left" aria-label={`${item.name}, ${rupee(fromPrice(item))}${soldOut ? ", sold out" : ""}`}>
-        <div className="h-[92px] w-[92px] shrink-0 overflow-hidden rounded-xl bg-surface-2">
-          <ItemVisual item={item} keys={keys} className="h-full w-full p-1.5" />
+        <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-lg bg-surface-2">
+          <ItemVisual item={item} />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="flex items-start gap-2 text-[15.5px] font-bold leading-snug">

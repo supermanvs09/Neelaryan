@@ -56,14 +56,14 @@ function Menu({ menu }: { menu: ShopMenu }) {
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the menu" aria-label="Search the menu" className="field-input h-11 w-full rounded-full pl-10 pr-10" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the menu" aria-label="Search the menu" className="field-input h-11 w-full pl-10 pr-10" />
             {q && (
               <button type="button" onClick={() => setQ("")} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-surface-2" aria-label="Clear search">
                 <X size={16} />
               </button>
             )}
           </div>
-          <button type="button" aria-pressed={diet === "veg"} onClick={() => setDiet(diet === "veg" ? "all" : "veg")} className={clsx("flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-[14px] font-semibold", diet === "veg" ? "border-veg bg-veg/10 text-veg" : "border-line bg-surface")}>
+          <button type="button" aria-pressed={diet === "veg"} onClick={() => setDiet(diet === "veg" ? "all" : "veg")} className={clsx("flex h-11 shrink-0 items-center gap-2 rounded-lg border px-4 text-[14px] font-semibold", diet === "veg" ? "border-veg bg-veg/10 text-veg" : "border-line bg-surface")}>
             <span className="grid h-[14px] w-[14px] place-items-center rounded-[3px] border-[1.5px] border-veg">
               <span className="h-[6px] w-[6px] rounded-full bg-veg" />
             </span>
@@ -81,7 +81,7 @@ function Menu({ menu }: { menu: ShopMenu }) {
                 document.getElementById(c.slug)?.scrollIntoView({ block: "start", behavior: "smooth" });
                 history.replaceState(null, "", `#${c.slug}`);
               }}
-              className={clsx("h-9 shrink-0 rounded-full px-3.5 text-[13.5px] font-semibold leading-9 transition-colors", active === c.slug ? "bg-primary text-primary-fg" : "bg-surface text-fg hover:bg-surface-2")}
+              className={clsx("h-9 shrink-0 rounded-lg px-3.5 text-[13.5px] font-semibold leading-9 transition-colors", active === c.slug ? "bg-primary text-primary-fg" : "bg-surface text-fg hover:bg-surface-2")}
             >
               {c.name}
             </a>

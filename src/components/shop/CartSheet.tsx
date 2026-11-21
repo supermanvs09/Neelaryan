@@ -8,7 +8,6 @@ import { priceCart, totalsFor, useShop } from "@/lib/shop/store";
 import { Sheet, ShopButton, Stepper, rupee } from "./ui";
 import { ItemVisual } from "./ItemVisual";
 import { useOpenItem } from "./ItemSheet";
-import { visualKeys } from "@/lib/shop/menu";
 
 export const useCartSheet = create<{ open: boolean; set: (v: boolean) => void }>((set) => ({ open: false, set: (open) => set({ open }) }));
 
@@ -56,7 +55,7 @@ export function CartSheet() {
             {blocked ? (
               <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13.5px] text-danger">Remove the items marked unavailable to continue.</p>
             ) : (
-              <Link href="/checkout" onClick={() => setOpen(false)} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-semibold text-primary-fg hover:bg-primary-hover">
+              <Link href="/checkout" onClick={() => setOpen(false)} className="flex min-h-[52px] w-full items-center justify-center rounded-lg bg-primary text-[16px] font-semibold text-primary-fg hover:bg-primary-hover">
                 {mode === "dine_in" && table ? `Checkout · Table ${table.label}` : "Checkout"}
               </Link>
             )}
@@ -69,7 +68,7 @@ export function CartSheet() {
           <ShoppingBag size={28} className="mx-auto text-muted" aria-hidden />
           <p className="mt-3 text-[16px] font-semibold">Your order is empty</p>
           <p className="mt-1 text-[14px] text-muted">Add something from the menu to get started.</p>
-          <Link href="/menu" onClick={() => setOpen(false)} className="mt-5 inline-flex min-h-[48px] items-center rounded-full border border-line px-6 font-semibold hover:border-line-strong">
+          <Link href="/menu" onClick={() => setOpen(false)} className="mt-5 inline-flex min-h-[48px] items-center rounded-lg border border-line px-6 font-semibold hover:border-line-strong">
             Browse the menu
           </Link>
         </div>
@@ -79,8 +78,8 @@ export function CartSheet() {
             const item = menu ? itemById(menu, l.line.item_id) : undefined;
             return (
               <li key={l.line.key} className="flex gap-3 px-5 py-4">
-                <button type="button" className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-2" onClick={() => item && l.ok && (setOpen(false), openItem(item, l.line))} aria-label={`Edit ${l.name}`} disabled={!item || !l.ok}>
-                  {item && <ItemVisual item={item} keys={menu ? visualKeys(menu, item, l.line.modifier_ids) : []} className="h-full w-full p-1" />}
+                <button type="button" className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface-2" onClick={() => item && l.ok && (setOpen(false), openItem(item, l.line))} aria-label={`Edit ${l.name}`} disabled={!item || !l.ok}>
+                  {item && <ItemVisual item={item} iconSize={22} />}
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">

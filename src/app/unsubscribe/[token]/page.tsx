@@ -14,7 +14,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
   const c = rows[0];
   return (
     <main className="grid min-h-dvh place-items-center bg-bg px-4 py-10 text-fg">
-      <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 text-center">
+      <div className="w-full max-w-md rounded-xl border border-line bg-surface p-6 text-center">
         <p className="eyebrow">{business.name}</p>
         {!c ? (
           <>

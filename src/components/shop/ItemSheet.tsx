@@ -61,10 +61,12 @@ function Configurator({ menu, item, edit, onDone }: { menu: ShopMenu; item: Shop
   return (
     <div className="flex min-h-full flex-col">
       <div className="px-5 pt-4">
-        <div className="mx-auto aspect-[4/3] w-full max-w-[300px] overflow-hidden rounded-2xl bg-surface-2">
-          <ItemVisual item={item} className="h-full w-full p-4" />
-        </div>
-        <div className="mt-4 flex items-start gap-2">
+        {item.image && (
+          <div className="mb-4 aspect-[16/9] w-full overflow-hidden rounded-xl bg-surface-2">
+            <ItemVisual item={item} />
+          </div>
+        )}
+        <div className="flex items-start gap-2">
           <DietMark diet={item.diet} className="mt-1" />
           <p className="text-[14.5px] text-muted">{item.description}</p>
         </div>
@@ -125,7 +127,7 @@ export function Choice({ on, label, price, onClick, radio }: { on: boolean; labe
       role={radio ? "radio" : "checkbox"}
       aria-checked={on}
       onClick={onClick}
-      className={clsx("flex min-h-[52px] items-center gap-2.5 rounded-2xl border px-3 py-2 text-left text-[14px] transition-colors", on ? "border-primary bg-primary-soft font-semibold" : "border-line bg-surface hover:border-line-strong")}
+      className={clsx("flex min-h-[52px] items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-[14px] transition-colors", on ? "border-primary bg-primary-soft font-semibold" : "border-line bg-surface hover:border-line-strong")}
     >
       <span className={clsx("grid h-5 w-5 shrink-0 place-items-center border-2", radio ? "rounded-full" : "rounded-md", on ? "border-primary bg-primary text-primary-fg" : "border-line-strong")} aria-hidden>
         {on && (radio ? <span className="h-2 w-2 rounded-full bg-primary-fg" /> : <Check size={13} strokeWidth={3} />)}
