@@ -1,93 +1,106 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ChevronRight, ReceiptText } from "lucide-react";
-import { isActive, useOrders } from "@/store/orders";
-import type { Order, OrderStatus } from "@/store/types";
-import { dateOf, rupees, timeOf } from "@/lib/format";
+import { Spinner, rupee } from "@/components/shop/ui";
+import { useShop, useShopHydrated } from "@/lib/shop/store";
+import { useAccount } from "@/lib/shop/account";
 import { clsx } from "@/lib/clsx";
 
-const LABEL: Record<OrderStatus, string> = {
-  NEW: "Placed",
-  ACCEPTED: "Accepted",
-  PREPARING: "Preparing",
-  READY: "Ready",
-  SERVED: "Served",
-  OUT_FOR_DELIVERY: "Out for delivery",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-  REJECTED: "Rejected",
-};
-
-export default function OrdersPage() {
-  const hydrated = useOrders((s) => s.hydrated);
-  const orders = useOrders((s) => s.orders);
-  const active = orders.filter(isActive);
-  const past = orders.filter((o) => !isActive(o));
-
-  return (
-    <div className="mx-auto max-w-[860px] pb-10">
-      <p className="eyebrow">Your NEELARYAN</p>
-      <h1 className="mt-1 font-display text-[44px] font-semibold leading-none text-navy-900">Orders</h1>
-      {!hydrated ? (
-        <div className="mt-6 space-y-3">
-          {[0, 1].map((i) => (
-            <div key={i} className="skeleton h-24 rounded-3xl" />
-          ))}
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="py-20 text-center">
-          <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-cream text-gold-600">
-            <ReceiptText size={32} />
-          </div>
-          <p className="mt-4 font-display text-[28px] font-semibold text-navy-900">No orders yet</p>
-          <p className="mt-1 text-ink-soft">Your orders and live tracking will show up here.</p>
-          <Link href="/menu" className="btn-primary mt-6">
-            Start an order
-          </Link>
-        </div>
-      ) : (
-        <>
-          {active.length > 0 && <List title="In progress" orders={active} live />}
-          {past.length > 0 && <List title="Past orders" orders={past} />}
-        </>
-      )}
-    </div>
-  );
+interface Row {
+  id: string;
+  number: number;
+  type: string;
+  status: string;
+  total: number;
+  created_at: string;
+  table_label: string | null;
+  items: string;
 }
 
-function List({ title, orders, live }: { title: string; orders: Order[]; live?: boolean }) {
+const LABEL: Record<string, string> = { new: "Waiting to confirm", accepted: "Confirmed", preparing: "Being prepared", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled", rejected: "Not accepted" };
+const LIVE = new Set(["new", "accepted", "preparing", "ready", "served"]);
+
+export default function OrdersPage() {
+  const hydrated = useShopHydrated();
+  const mine = useShop((s) => s.orders);
+  const account = useAccount((s) => s.data);
+  const signedIn = useAccount((s) => s.signedIn);
+  const [device, setDevice] = useState<Row[] | null>(null);
+
+  // orders placed on this phone (each fetched with its own device token)
+  useEffect(() => {
+    if (!hydrated) return;
+    let cancel = false;
+    Promise.all(
+      mine.slice(0, 15).map(async (m) => {
+        try {
+          const r = await fetch(`/api/public/orders/${m.id}`, { headers: { "x-order-token": m.token }, cache: "no-store" });
+          if (!r.ok) return null;
+          const o = (await r.json()).order;
+          return { id: o.id, number: o.number, type: o.type, status: o.status, total: Number(o.total), created_at: o.created_at, table_label: o.table_label, items: o.items.map((i: { qty: number; name: string }) => `${i.qty} × ${i.name}`).join(", ") } as Row;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((rows) => !cancel && setDevice(rows.filter(Boolean) as Row[]));
+    return () => {
+      cancel = true;
+    };
+  }, [hydrated, mine]);
+
+  const merged = new Map<string, Row>();
+  for (const o of device ?? []) merged.set(o.id, o);
+  for (const o of account?.orders ?? []) if (!merged.has(o.id)) merged.set(o.id, { ...o, total: Number(o.total) });
+  const rows = [...merged.values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const loading = !hydrated || device === null || signedIn === null;
+
   return (
-    <section className="mt-7">
-      <h2 className="mb-3 text-[15px] font-bold uppercase tracking-[0.14em] text-gold-700">{title}</h2>
-      <ul className="space-y-3">
-        {orders.map((o) => (
-          <li key={o.id}>
-            <Link href={`/orders/${o.id}`} className="card flex items-center gap-4 p-4 hover:shadow-lift">
-              <span className={clsx("relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl", live ? "bg-navy-800 text-gold-300" : "bg-cream text-gold-700")}>
-                {live && <span aria-hidden className="absolute inset-0 animate-pulse-ring rounded-2xl bg-gold-400/50" />}
-                <ReceiptText size={20} className="relative" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <b className="text-navy-900">#{o.id}</b>
-                  <span className={clsx("rounded-full px-2 py-0.5 text-[11.5px] font-bold", o.status === "COMPLETED" ? "bg-veg/10 text-veg" : o.status === "REJECTED" || o.status === "CANCELLED" ? "bg-nonveg/10 text-nonveg" : "bg-gold-200 text-gold-700")}>{LABEL[o.status]}</span>
-                </span>
-                <span className="block truncate text-[13.5px] text-ink-muted">
-                  {o.lines.map((l) => `${l.qty}× ${l.name}`).join(", ")}
-                </span>
-                <span className="block text-[12.5px] text-ink-muted">
-                  {dateOf(o.createdAt)} · {timeOf(o.createdAt)} · {o.mode === "dine-in" ? `Table ${o.table}` : o.mode === "takeaway" ? "Takeaway" : "Delivery"}
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <b className="block tabular-nums text-navy-900">{rupees(o.total)}</b>
-                <ChevronRight size={18} className="ml-auto mt-1 text-ink-muted" />
-              </span>
+    <div className="mx-auto max-w-[720px]">
+      <h1 className="font-display text-[34px] font-semibold">Your orders</h1>
+      {loading ? (
+        <div className="grid place-items-center py-20 text-muted">
+          <Spinner />
+        </div>
+      ) : !rows.length ? (
+        <div className="py-16 text-center">
+          <ReceiptText size={28} className="mx-auto text-muted" aria-hidden />
+          <p className="mt-3 text-[17px] font-semibold">No orders yet</p>
+          <p className="mt-1 text-muted">{signedIn ? "Orders you place will show here." : "Orders placed on this phone show here. Sign in to see orders from other devices."}</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <Link href="/menu" className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-6 font-semibold text-primary-fg">
+              Browse the menu
             </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+            {!signedIn && (
+              <Link href="/account?next=/orders" className="inline-flex min-h-[48px] items-center rounded-full border border-line px-6 font-semibold">
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <ul className="mt-4 space-y-2.5">
+          {rows.map((o) => (
+            <li key={o.id}>
+              <Link href={`/orders/${o.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-line-strong">
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="num font-bold">#{o.number}</span>
+                    <span className={clsx("rounded-full px-2.5 py-0.5 text-[12px] font-semibold", LIVE.has(o.status) ? "bg-primary-soft text-fg" : o.status === "completed" ? "bg-success-soft text-success" : "bg-surface-2 text-muted")}>{LABEL[o.status] ?? o.status}</span>
+                  </p>
+                  <p className="mt-1 truncate text-[13.5px] text-muted">{o.items}</p>
+                  <p className="mt-0.5 text-[12.5px] text-muted">
+                    {new Date(o.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · {o.type === "dine_in" ? `Table ${o.table_label ?? ""}` : "Takeaway"}
+                  </p>
+                </div>
+                <span className="num font-semibold">{rupee(o.total)}</span>
+                <ChevronRight size={18} className="text-muted" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

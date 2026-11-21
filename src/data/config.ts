@@ -24,37 +24,3 @@ export const SIMPLE_GROUPS: Record<Exclude<CustomizerKind, "oats-builder" | "sha
 };
 
 export const NOTES_MAX = 140;
-
-/** Tax applied on (subtotal − discount). Matches the "Taxes (5% GST)" line in the mockups. */
-export const GST_RATE = 0.05;
-
-export interface Coupon {
-  code: string;
-  title: string;
-  kind: "flat" | "percent";
-  value: number;
-  minOrder: number;
-  maxDiscount?: number;
-}
-
-/** Demo coupons — real ones are created by the owner in Admin → Coupons. */
-export const COUPONS: Coupon[] = [
-  { code: "NEEL20", title: "₹20 off on orders above ₹199", kind: "flat", value: 20, minOrder: 199 },
-  { code: "GOODNESS10", title: "10% off up to ₹50 on orders above ₹299", kind: "percent", value: 10, minOrder: 299, maxDiscount: 50 },
-];
-
-export function couponDiscount(c: Coupon, subtotal: number) {
-  if (subtotal < c.minOrder) return 0;
-  const raw = c.kind === "flat" ? c.value : Math.round((subtotal * c.value) / 100);
-  return Math.min(raw, c.maxDiscount ?? raw, subtotal);
-}
-
-export const BRANCH = { id: "main", name: "NEELARYAN Café" };
-
-/** Valid dine-in tables for the demo branch (QR codes encode ?table=NN). */
-export const TABLES = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
-
-export const LOYALTY_TARGET = 10;
-export const LOYALTY_REWARD = "1 free signature drink";
-
-export const PREP_ESTIMATE = "15 – 20 mins";

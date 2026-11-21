@@ -1,12 +1,6 @@
-import { AppShell } from "@/components/shell/AppShell";
-import { ProductSheet } from "@/components/menu/ProductSheet";
+import { ShopShell } from "@/components/shop/ShopShell";
 
-/** Customer-facing shop: menu, ordering, tracking, rewards. */
+/** Customer-facing shop: menu, ordering, tracking, rewards and account. */
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <AppShell>{children}</AppShell>
-      <ProductSheet />
-    </>
-  );
+  return <ShopShell>{children}</ShopShell>;
 }

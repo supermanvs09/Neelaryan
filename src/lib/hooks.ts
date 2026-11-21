@@ -1,18 +1,6 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { useApp } from "@/store/app";
-
-/** True once the persisted app store has been read from storage on the client. */
-export function useAppHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    const p = useApp.persist;
-    if (p.hasHydrated()) setHydrated(true);
-    return p.onFinishHydration(() => setHydrated(true));
-  }, []);
-  return hydrated;
-}
 
 function subscribeMedia(query: string) {
   return (cb: () => void) => {

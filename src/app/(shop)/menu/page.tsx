@@ -2,174 +2,110 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import { CATEGORIES, MENU, type CategoryId, type MenuItem } from "@/data/menu";
-import { ItemCard } from "@/components/menu/ItemCard";
+import { ItemCard, MenuGate } from "@/components/shop/ItemCard";
+import type { ShopMenu } from "@/lib/shop/menu";
 import { clsx } from "@/lib/clsx";
 
-type FilterId = "veg" | "egg" | "nonveg" | "bestseller" | "healthy" | "protein" | "spicy" | "under100";
-
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: "veg", label: "Veg" },
-  { id: "egg", label: "Egg" },
-  { id: "nonveg", label: "Non-veg" },
-  { id: "bestseller", label: "Bestseller" },
-  { id: "healthy", label: "Healthy" },
-  { id: "protein", label: "Protein rich" },
-  { id: "spicy", label: "Spicy" },
-  { id: "under100", label: "Under ₹100" },
-];
-
-function matches(m: MenuItem, q: string, filters: Set<FilterId>) {
-  if (q) {
-    const hay = `${m.name} ${m.description}`.toLowerCase();
-    if (!q.split(/\s+/).every((w) => hay.includes(w))) return false;
-  }
-  const diets = (["veg", "egg", "nonveg"] as const).filter((d) => filters.has(d));
-  if (diets.length && !diets.includes(m.diet as (typeof diets)[number])) return false;
-  if (filters.has("bestseller") && !m.tags.includes("bestseller")) return false;
-  if (filters.has("healthy") && !m.tags.includes("healthy")) return false;
-  if (filters.has("protein") && !m.tags.includes("protein")) return false;
-  if (filters.has("spicy") && !m.tags.includes("spicy")) return false;
-  if (filters.has("under100") && m.price >= 100) return false;
-  return m.availability !== "unavailable";
+export default function MenuPage() {
+  return <MenuGate>{(menu) => <Menu menu={menu} />}</MenuGate>;
 }
 
-export default function MenuPage() {
-  const reduced = useReducedMotion();
-  const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<Set<FilterId>>(new Set());
-  const [active, setActive] = useState<CategoryId>(CATEGORIES[0].id);
-  const tabs = useRef<HTMLDivElement>(null);
-  const q = query.trim().toLowerCase();
+type Diet = "all" | "veg";
 
-  const sections = useMemo(
-    () => CATEGORIES.map((c) => ({ cat: c, items: MENU.filter((m) => m.category === c.id && matches(m, q, filters)) })).filter((s) => s.items.length),
-    [q, filters],
-  );
-  const count = sections.reduce((n, s) => n + s.items.length, 0);
+function Menu({ menu }: { menu: ShopMenu }) {
+  const [q, setQ] = useState("");
+  const [diet, setDiet] = useState<Diet>("all");
+  const [active, setActive] = useState<string | null>(null);
+  const rail = useRef<HTMLDivElement>(null);
 
-  // scroll-spy: highlight the category in view
+  const sections = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return menu.categories
+      .map((c) => ({
+        c,
+        items: menu.items.filter((i) => i.category_id === c.id && (diet === "all" || i.diet === "veg") && (!s || i.name.toLowerCase().includes(s) || i.description.toLowerCase().includes(s) || i.tags.some((t) => t.includes(s)))),
+      }))
+      .filter((x) => x.items.length);
+  }, [menu, q, diet]);
+
+  // highlight the category in view
   useEffect(() => {
-    const els = sections.map((s) => document.getElementById(s.cat.id)).filter(Boolean) as HTMLElement[];
-    const io = new IntersectionObserver(
-      (entries) => {
-        const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (vis) setActive(vis.target.id as CategoryId);
-      },
-      { rootMargin: "-170px 0px -60% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
+    const els = sections.map((x) => document.getElementById(x.c.slug)).filter(Boolean) as HTMLElement[];
+    const io = new IntersectionObserver((entries) => {
+      const v = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (v) setActive(v.target.id);
+    }, { rootMargin: "-140px 0px -60% 0px" });
+    els.forEach((e) => io.observe(e));
     return () => io.disconnect();
   }, [sections]);
-
-  // keep the active tab visible in the horizontal rail
   useEffect(() => {
-    const btn = tabs.current?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
-    btn?.scrollIntoView({ block: "nearest", inline: "center", behavior: reduced ? "auto" : "smooth" });
-  }, [active, reduced]);
-
-  // deep links like /menu#oats-bowls
+    rail.current?.querySelector(`[data-cat="${active}"]`)?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [active]);
+  // deep link /menu#category
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id) return;
-    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "auto" }), 60);
-    return () => clearTimeout(t);
+    const h = decodeURIComponent(window.location.hash.slice(1));
+    if (h) setTimeout(() => document.getElementById(h)?.scrollIntoView({ block: "start" }), 50);
   }, []);
 
-  const toggle = (f: FilterId) =>
-    setFilters((prev) => {
-      const n = new Set(prev);
-      if (n.has(f)) n.delete(f);
-      else n.add(f);
-      return n;
-    });
+  const total = sections.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <div className="pt-2">
-      <header className="mb-4">
-        <p className="eyebrow">NEELARYAN Café</p>
-        <h1 className="mt-1 font-display text-[44px] font-semibold leading-none text-navy-900 md:text-[56px]">Menu</h1>
-      </header>
-
-      <div className="sticky top-16 z-30 -mx-4 bg-ivory/90 px-4 pb-2 pt-2 backdrop-blur-md md:top-20 md:-mx-8 md:px-8">
-        <div className="relative">
-          <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
-          <label htmlFor="menu-search" className="sr-only">
-            Search the menu
-          </label>
-          <input
-            id="menu-search"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search for your favourites…"
-            className="h-12 w-full rounded-full border border-sand-400 bg-white/85 pl-11 pr-11 text-[15.5px] outline-none placeholder:text-ink-muted focus:border-gold-500"
-          />
-          {query && (
-            <button onClick={() => setQuery("")} className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-ink-muted hover:bg-cream" aria-label="Clear search">
-              <X size={17} />
-            </button>
-          )}
-        </div>
-        <div className="no-scrollbar -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0" role="group" aria-label="Filters">
-          {FILTERS.map((f) => {
-            const on = filters.has(f.id);
-            return (
-              <button key={f.id} onClick={() => toggle(f.id)} aria-pressed={on} className={clsx("chip", on ? "border-navy-800 bg-navy-800 text-ivory" : "border-sand-400 bg-white/70 text-navy-800 hover:border-gold-500")}>
-                {f.label}
+    <div>
+      <h1 className="sr-only">Menu</h1>
+      <div className="sticky top-16 z-30 -mx-4 border-b border-line bg-bg/95 px-4 pb-2 pt-2 md:top-[72px] md:mx-0 md:px-0">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the menu" aria-label="Search the menu" className="field-input h-11 w-full rounded-full pl-10 pr-10" />
+            {q && (
+              <button type="button" onClick={() => setQ("")} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-surface-2" aria-label="Clear search">
+                <X size={16} />
               </button>
-            );
-          })}
-        </div>
-        {sections.length > 1 && (
-          <div ref={tabs} className="no-scrollbar -mx-4 mt-2 flex gap-1 overflow-x-auto border-t border-sand-400/50 px-4 pt-2 md:mx-0 md:px-0" aria-label="Categories">
-            {sections.map(({ cat }) => (
-              <a
-                key={cat.id}
-                href={`#${cat.id}`}
-                data-tab={cat.id}
-                aria-current={active === cat.id ? "true" : undefined}
-                className={clsx("relative shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors", active === cat.id ? "text-navy-900" : "text-ink-muted hover:text-navy-900")}
-              >
-                {active === cat.id && <motion.span layoutId="cat-pill" className="absolute inset-0 -z-10 rounded-full bg-gold-200" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
-                {cat.short}
-              </a>
-            ))}
+            )}
           </div>
-        )}
+          <button type="button" aria-pressed={diet === "veg"} onClick={() => setDiet(diet === "veg" ? "all" : "veg")} className={clsx("flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-[14px] font-semibold", diet === "veg" ? "border-veg bg-veg/10 text-veg" : "border-line bg-surface")}>
+            <span className="grid h-[14px] w-[14px] place-items-center rounded-[3px] border-[1.5px] border-veg">
+              <span className="h-[6px] w-[6px] rounded-full bg-veg" />
+            </span>
+            Veg only
+          </button>
+        </div>
+        <div ref={rail} className="no-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0" role="navigation" aria-label="Menu sections">
+          {sections.map(({ c }) => (
+            <a
+              key={c.id}
+              href={`#${c.slug}`}
+              data-cat={c.slug}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(c.slug)?.scrollIntoView({ block: "start", behavior: "smooth" });
+                history.replaceState(null, "", `#${c.slug}`);
+              }}
+              className={clsx("h-9 shrink-0 rounded-full px-3.5 text-[13.5px] font-semibold leading-9 transition-colors", active === c.slug ? "bg-primary text-primary-fg" : "bg-surface text-fg hover:bg-surface-2")}
+            >
+              {c.name}
+            </a>
+          ))}
+        </div>
       </div>
 
-      <p className="sr-only" aria-live="polite">
-        {count} items shown
-      </p>
-
-      {sections.length === 0 ? (
-        <div className="mx-auto max-w-sm py-20 text-center">
-          <p className="font-display text-[28px] font-semibold text-navy-900">Nothing matches that</p>
-          <p className="mt-1 text-ink-soft">Try another word, or clear the filters.</p>
-          <button
-            className="btn-ghost mt-5"
-            onClick={() => {
-              setQuery("");
-              setFilters(new Set());
-            }}
-          >
-            Clear search & filters
+      {!total ? (
+        <div className="py-20 text-center">
+          <p className="text-[17px] font-semibold">Nothing matches “{q}”</p>
+          <button type="button" onClick={() => (setQ(""), setDiet("all"))} className="mt-3 font-semibold text-primary hover:underline">
+            Show everything
           </button>
         </div>
       ) : (
-        sections.map(({ cat, items }) => (
-          <section key={cat.id} id={cat.id} className="scroll-mt-[190px] pt-8 md:scroll-mt-[210px]" aria-labelledby={`${cat.id}-h`}>
-            <div className="mb-4">
-              <h2 id={`${cat.id}-h`} className="font-display text-[30px] font-semibold leading-tight text-navy-900 md:text-[36px]">
-                {cat.name}
-              </h2>
-              {cat.blurb && <p className="mt-0.5 text-[14px] italic text-gold-700">{cat.blurb}</p>}
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4 [perspective:1400px]">
-              {items.map((m) => (
-                <ItemCard key={m.id} item={m} />
+        sections.map(({ c, items }) => (
+          <section key={c.id} id={c.slug} aria-labelledby={`h-${c.slug}`} className="scroll-mt-[150px] pt-6 md:scroll-mt-[160px]">
+            <h2 id={`h-${c.slug}`} className="text-[21px] font-bold">
+              {c.name}
+            </h2>
+            {c.description && <p className="mt-0.5 text-[14px] text-muted">{c.description}</p>}
+            <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {items.map((i) => (
+                <ItemCard key={i.id} menu={menu} item={i} />
               ))}
             </div>
           </section>
