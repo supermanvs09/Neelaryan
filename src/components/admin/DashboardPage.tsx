@@ -1,5 +1,6 @@
 "use client";
 
+import { TableRequests } from "./orders/TableRequests";
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Cake, ChefHat, Plus, ReceiptText } from "lucide-react";
@@ -78,6 +79,7 @@ function Body({ d }: { d: Dash }) {
   const can = useCan();
   return (
     <div className="space-y-4">
+      {can(["orders.view", "kitchen.view"]) && <TableRequests />}
       {/* Right now */}
       <section aria-label="Right now" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <Stat label="New orders" value={d.live.new} tone={d.live.new ? "accent" : "default"} sub={d.live.new ? "Waiting to be accepted" : "All caught up"} href={can("orders.view") ? "/admin/orders" : undefined} />

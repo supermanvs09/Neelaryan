@@ -7,10 +7,12 @@ import { qs, useApi } from "@/lib/api-client";
 import { dateOf, dateTime, money, pct } from "@/lib/format";
 import { PeriodPicker, periodFor } from "./FinancePage";
 import { clsx } from "@/lib/clsx";
+import { CLASS_INFO, type InsightRow, type MenuClass } from "@/lib/analytics";
 
-type Kind = "items" | "hours" | "tax" | "payments" | "orders";
+type Kind = "items" | "insights" | "hours" | "tax" | "payments" | "orders";
 const TABS: { value: Kind; label: string; about: string }[] = [
   { value: "items", label: "Sales by item", about: "What sells, and what each item earns after its cost. Completed orders only." },
+  { value: "insights", label: "Menu insights", about: "Each item sorted by how popular it is and how much it earns per sale — with what to do about it. Uses recipe or cost prices; completed orders only." },
   { value: "hours", label: "Busy hours", about: "Orders by day of week and hour — plan staff and prep around the peaks." },
   { value: "tax", label: "GST summary", about: "Taxable value and GST per day for filing. CGST and SGST are each half of the GST charged." },
   { value: "payments", label: "Payments", about: "Every payment and refund taken, by method — reconcile with your cash drawer and UPI statements." },
@@ -32,14 +34,17 @@ export function ReportsPage() {
       <Tabs className="mb-4" value={kind} onChange={setKind} items={TABS.map(({ value, label }) => ({ value, label }))} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <PeriodPicker preset={preset} setPreset={setPreset} from={from} to={to} setRange={(f, t) => { setFrom(f); setTo(t); }} />
-        <a href={`/api/admin/reports/${kind}${qs({ from, to, format: "csv" })}`}>
-          <Button variant="secondary" icon={<Download size={15} />}>
-            Download CSV
-          </Button>
-        </a>
+        {kind !== "insights" && (
+          <a href={`/api/admin/reports/${kind}${qs({ from, to, format: "csv" })}`}>
+            <Button variant="secondary" icon={<Download size={15} />}>
+              Download CSV
+            </Button>
+          </a>
+        )}
       </div>
       <p className="mb-3 text-[13.5px] text-muted">{tab.about}</p>
       {kind === "items" && <ItemsReport url={url} />}
+      {kind === "insights" && <InsightsReport url={`/api/admin/insights${qs({ from, to })}`} />}
       {kind === "hours" && <HoursReport url={url} />}
       {kind === "tax" && <TaxReport url={url} />}
       {kind === "payments" && <PaymentsReport url={url} />}
@@ -266,4 +271,47 @@ function OrdersReport({ url }: { url: string }) {
       />
     </Card>
   ));
+}
+
+const CLASS_TONE: Record<MenuClass, "success" | "warning" | "primary" | "danger" | "neutral"> = { star: "success", plowhorse: "warning", puzzle: "primary", dog: "danger", unknown: "neutral" };
+
+function InsightsReport({ url }: { url: string }) {
+  const wrap = useReport<{ totalUnits: number; popularAt: number; averageMargin: number | null; rows: InsightRow[] }>(url);
+  const [filter, setFilter] = useState<MenuClass | "all">("all");
+  return wrap((d) => {
+    const counts = (Object.keys(CLASS_INFO) as MenuClass[]).map((k) => ({ k, n: d.rows.filter((r) => r.klass === k).length }));
+    const rows = filter === "all" ? d.rows : d.rows.filter((r) => r.klass === filter);
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {counts.map(({ k, n }) => (
+            <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(filter === k ? "all" : k)} className={clsx("rounded-lg border bg-surface p-3 text-left hover:border-line-strong", filter === k ? "border-primary ring-2 ring-primary/20" : "border-line")}>
+              <span className="flex items-center justify-between gap-2">
+                <Badge tone={CLASS_TONE[k]}>{CLASS_INFO[k].label}</Badge>
+                <span className="num text-[18px] font-bold">{n}</span>
+              </span>
+              <span className="mt-1.5 block text-[12.5px] text-muted">{CLASS_INFO[k].hint}</span>
+            </button>
+          ))}
+        </div>
+        {filter !== "all" && <p className="rounded-lg bg-surface-2 px-3 py-2 text-[13.5px]"><b>What to do:</b> {CLASS_INFO[filter].action}</p>}
+        <Card padded={false} description={`${d.totalUnits} items sold. “Popular” means at least ${d.popularAt.toFixed(1)} sold; average profit per item ${d.averageMargin === null ? "—" : money(d.averageMargin)}.`}>
+          <DataTable
+            rows={rows}
+            rowKey={(r) => r.menu_item_id ?? r.name}
+            empty={<Empty title="No sales in this period" />}
+            columns={[
+              { key: "n", header: "Item", primary: true, cell: (r) => <span className="font-semibold">{r.name}</span> },
+              { key: "k", header: "Group", cell: (r) => <Badge tone={CLASS_TONE[r.klass]}>{CLASS_INFO[r.klass].label}</Badge> },
+              { key: "q", header: "Sold", align: "right", cell: (r) => <span className="num">{r.qty}</span> },
+              { key: "m", header: "Share", align: "right", hideOnCard: true, cell: (r) => <span className="num">{pct(r.mix)}</span> },
+              { key: "s", header: "Sales", align: "right", cell: (r) => <span className="num">{money(r.sales)}</span> },
+              { key: "u", header: "Profit / item", align: "right", cell: (r) => <span className="num">{r.marginPerUnit === null ? "—" : money(r.marginPerUnit)}</span> },
+              { key: "p", header: "Margin", align: "right", hideOnCard: true, cell: (r) => <span className="num">{pct(r.marginPct)}</span> },
+            ]}
+          />
+        </Card>
+      </div>
+    );
+  });
 }

@@ -15,6 +15,7 @@ export interface Pnl {
   collections: { method: string; received: number; refunded: number; net: number }[];
   purchases: { count: number; total: number; paid: number };
   warnings: { uncosted_lines: number; unvalued_stock_movements: number };
+  previous?: { from: string; to: string; totals: Pnl["totals"] };
 }
 interface Bucket {
   key: string;
@@ -146,6 +147,7 @@ function PnlView({ from, to, group }: { from: string; to: string; group: "day" |
   if (loading || !data) return <LoadingBlock rows={8} />;
   const t = data.totals;
   const hasWholesale = t.revenue_wholesale > 0;
+  const p = data.previous?.totals;
 
   return (
     <div className="space-y-4">
@@ -157,9 +159,9 @@ function PnlView({ from, to, group }: { from: string; to: string; group: "day" |
         </Notice>
       )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Net revenue" value={money(t.net_revenue)} sub={`${t.orders} orders${t.avg_order ? ` · avg ${money(t.avg_order)}` : ""}`} />
-        <Stat label="Gross profit" value={money(t.gross_profit)} sub={`Margin ${pct(t.gross_margin)} · food cost ${pct(t.food_cost_pct)}`} />
-        <Stat label="Net profit" value={money(t.net_profit)} tone={t.net_profit < 0 ? "danger" : "success"} sub={`Margin ${pct(t.net_margin)}`} />
+        <Stat label="Net revenue" value={money(t.net_revenue)} sub={<>{`${t.orders} orders${t.avg_order ? ` · avg ${money(t.avg_order)}` : ""}`}<Delta now={t.net_revenue} before={p?.net_revenue} /></>} />
+        <Stat label="Gross profit" value={money(t.gross_profit)} sub={<>{`Margin ${pct(t.gross_margin)} · food cost ${pct(t.food_cost_pct)}`}<Delta now={t.gross_profit} before={p?.gross_profit} /></>} />
+        <Stat label="Net profit" value={money(t.net_profit)} tone={t.net_profit < 0 ? "danger" : "success"} sub={<>{`Margin ${pct(t.net_margin)}`}<Delta now={t.net_profit} before={p?.net_profit} /></>} />
         <Stat label="GST collected" value={money(t.gst)} sub="Payable — not your income" />
       </div>
 
@@ -572,5 +574,18 @@ function ExpenseForm({ categories, onClose, onSaved }: { categories: { id: strin
         </Field>
       </div>
     </Dialog>
+  );
+}
+
+/** Change vs the same-length period just before (shown only when there was something to compare with). */
+function Delta({ now, before }: { now: number; before: number | undefined }) {
+  if (before === undefined || before === 0) return null;
+  const change = (now - before) / Math.abs(before);
+  if (!Number.isFinite(change)) return null;
+  const up = change >= 0;
+  return (
+    <span className={clsx("block font-semibold", up ? "text-success" : "text-danger")}>
+      {up ? "▲" : "▼"} {Math.abs(change * 100).toFixed(Math.abs(change) < 0.1 ? 1 : 0)}% vs previous period
+    </span>
   );
 }

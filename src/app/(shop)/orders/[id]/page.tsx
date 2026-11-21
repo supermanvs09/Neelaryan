@@ -356,7 +356,12 @@ function UpiPanel({ order, headers, vpa, payee, onClaimed }: { order: PublicOrde
         <>
           <p className="mt-1 text-[14px] text-muted">{t("upi.scan")}</p>
           <div className="mt-4 grid items-center gap-4 sm:grid-cols-[180px_1fr]">
-            <div className="mx-auto w-[180px] rounded-lg border border-line bg-[#fff] p-2">{qr ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={qr} alt={`UPI QR · ${rupee(due)}`} className="w-full" /> : <div className="aspect-square" />}</div>
+            <div className="mx-auto w-[180px] rounded-lg border border-line bg-[#fff] p-2">{qr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qr} alt={`UPI QR · ${rupee(due)}`} className="w-full" />
+            ) : (
+              <div className="aspect-square" />
+            )}</div>
             <div className="space-y-3">
               <a href={link} className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-primary px-5 font-semibold text-primary-fg hover:bg-primary-hover">
                 {t("upi.open")}

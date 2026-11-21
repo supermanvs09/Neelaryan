@@ -1,5 +1,6 @@
 "use client";
 
+import { ShoppingListTab, UsageCheckTab } from "./PlanningTabs";
 import { useEffect, useMemo, useState } from "react";
 import { Download, Pencil, Plus, Scale, Trash2 } from "lucide-react";
 import { Badge, Button, Card, Checkbox, DataTable, Dialog, Empty, ErrorBlock, Field, Input, LoadingBlock, Notice, PageHeader, Segmented, Select, Stat, Tabs, Textarea, useConfirm, useToast, type Column } from "../ui";
@@ -50,7 +51,7 @@ interface InvData {
 const u = (x: string): Unit => (isUnit(x) ? x : "pcs");
 
 export function InventoryPage() {
-  const [tab, setTab] = useState<"items" | "movements" | "categories">("items");
+  const [tab, setTab] = useState<"items" | "shopping" | "usage" | "movements" | "categories">("items");
   const { data, error, loading, reload } = useApi<InvData>("/api/admin/inventory");
   const can = useCan();
   const [edit, setEdit] = useState<InvItem | "new" | null>(null);
@@ -92,11 +93,15 @@ export function InventoryPage() {
         className="mb-4"
         items={[
           { value: "items", label: "Stock" },
+          { value: "shopping", label: "Shopping list" },
+          { value: "usage", label: "Usage check" },
           { value: "movements", label: "Stock movements" },
           { value: "categories", label: "Categories" },
         ]}
       />
       {tab === "items" && (loading ? <LoadingBlock rows={8} /> : data && <ItemsTab data={data} onEdit={setEdit} onAdjust={setAdjust} onView={setView} />)}
+      {tab === "shopping" && <ShoppingListTab />}
+      {tab === "usage" && <UsageCheckTab />}
       {tab === "movements" && data && <MovementsTab items={data.items} />}
       {tab === "categories" && data && <CategoriesTab categories={data.categories} reload={reload} />}
 

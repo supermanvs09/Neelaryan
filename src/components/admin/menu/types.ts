@@ -50,6 +50,9 @@ export interface AdminItem {
   group_ids: string[];
   default_modifier_ids: string[];
   recipe: { inventory_item_id: string; qty: number }[];
+  /** ready-made: sold straight from this stock item, one unit per portion */
+  stock_item_id: string | null;
+  stock_left?: number | null;
 }
 export interface InvOption {
   id: string;

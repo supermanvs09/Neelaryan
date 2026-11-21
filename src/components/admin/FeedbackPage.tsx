@@ -94,7 +94,7 @@ export function FeedbackPage() {
             <DataTable
               rows={data.feedback}
               rowKey={(r) => r.order_id}
-              empty={<Empty icon={<MessageSquareText size={22} />} title="No feedback in this period">Guests can rate an order once it's served, for up to 3 days.</Empty>}
+              empty={<Empty icon={<MessageSquareText size={22} />} title="No feedback in this period">Guests can rate an order once it&apos;s served, for up to 3 days.</Empty>}
               columns={[
                 { key: "r", header: "Rating", cell: (r) => <Stars n={r.rating} /> },
                 { key: "c", header: "Comment", primary: true, cell: (r) => (r.comment ? <span>“{r.comment}”</span> : <span className="text-muted">No comment</span>) },

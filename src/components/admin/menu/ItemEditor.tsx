@@ -29,6 +29,7 @@ type Form = {
   group_ids: string[];
   default_modifier_ids: string[];
   recipe: { inventory_item_id: string; qty: number }[];
+  stock_item_id: string | null;
 };
 
 const toForm = (i: AdminItem | null, menu: AdminMenu): Form =>
@@ -52,6 +53,7 @@ const toForm = (i: AdminItem | null, menu: AdminMenu): Form =>
         group_ids: i.group_ids,
         default_modifier_ids: i.default_modifier_ids,
         recipe: i.recipe,
+        stock_item_id: i.stock_item_id ?? null,
       }
     : {
         category_id: menu.categories[0]?.id ?? "",
@@ -72,6 +74,7 @@ const toForm = (i: AdminItem | null, menu: AdminMenu): Form =>
         group_ids: [],
         default_modifier_ids: [],
         recipe: [],
+        stock_item_id: null,
       };
 
 export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; item: AdminItem | null; onClose: () => void; onSaved: () => void }) {
@@ -88,7 +91,8 @@ export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; 
   const price = Number(f.price) || 0;
   const rCost = recipeCost(f.recipe.filter((r) => r.inventory_item_id && r.qty > 0), menu.inventory);
   const manualCost = f.cost_price === "" ? null : Number(f.cost_price);
-  const effectiveCost = rCost ?? manualCost;
+  const stockItem = f.stock_item_id ? menu.inventory.find((x) => x.id === f.stock_item_id) ?? null : null;
+  const effectiveCost = stockItem ? stockItem.avg_cost : rCost ?? manualCost;
 
   const onUpload = async (fl: File | undefined) => {
     if (!fl) return;
@@ -112,7 +116,8 @@ export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; 
         price: Number(f.price),
         cost_price: f.cost_price === "" ? null : Number(f.cost_price),
         variants: f.variants.map((v) => ({ ...v, price: Number(v.price), cost_price: v.cost_price === "" ? null : Number(v.cost_price) })),
-        recipe: f.recipe.filter((r) => r.inventory_item_id && r.qty > 0),
+        // a ready-made item is its own stock: no recipe, or it would be deducted twice
+        recipe: f.stock_item_id ? [] : f.recipe.filter((r) => r.inventory_item_id && r.qty > 0),
         image: undefined,
       };
       if (item) await apiFetch(`/api/admin/menu/items/${item.id}`, { method: "PATCH", body: payload });
@@ -353,11 +358,24 @@ export function ItemEditor({ menu, item, onClose, onSaved }: { menu: AdminMenu; 
           <p className="text-[13.5px] text-muted">
             When this item is ordered and the kitchen accepts it, these ingredients are taken out of stock automatically (and put back if the order is cancelled). Quantities are per one item.
           </p>
-          <RecipeEditor lines={f.recipe} onChange={(r) => set("recipe", r)} inventory={menu.inventory} />
+          <div className="rounded-lg border border-line p-3">
+            <Field label="Sell from stock (ready-made)" htmlFor="it-stock" hint="For bought-in items like bottled drinks, cookies or cakes by the piece: each portion sold takes one unit of this stock item, and the item shows as sold out when it runs out. Leave empty for dishes made from a recipe.">
+              <Select id="it-stock" value={f.stock_item_id ?? ""} onChange={(e) => set("stock_item_id", e.target.value || null)}>
+                <option value="">Not ready-made — use the recipe below</option>
+                {menu.inventory.map((inv) => (
+                  <option key={inv.id} value={inv.id}>
+                    {inv.name} (1 {inv.base_unit} per portion)
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            {item?.stock_item_id && item.stock_item_id === f.stock_item_id && item.stock_left !== undefined && item.stock_left !== null && <p className="mt-1.5 text-[13px] text-muted">{item.stock_left} left in stock.</p>}
+          </div>
+          {!stockItem && <RecipeEditor lines={f.recipe} onChange={(r) => set("recipe", r)} inventory={menu.inventory} />}
           <div className="grid gap-3 rounded-lg border border-line bg-surface-2/50 p-3 sm:grid-cols-3">
             <div>
-              <p className="text-[12px] text-muted">Ingredient cost</p>
-              <p className="num text-[18px] font-bold">{rCost === null ? (f.recipe.length ? "Some costs missing" : "—") : money(rCost)}</p>
+              <p className="text-[12px] text-muted">{stockItem ? "Stock cost per portion" : "Ingredient cost"}</p>
+              <p className="num text-[18px] font-bold">{stockItem ? (stockItem.avg_cost === null ? "Not bought yet" : money(stockItem.avg_cost)) : rCost === null ? (f.recipe.length ? "Some costs missing" : "—") : money(rCost)}</p>
             </div>
             <Field label="Manual cost (no recipe)" htmlFor="it-cost" hint="Used only when there's no recipe.">
               <Input id="it-cost" type="number" min={0} step="0.5" prefix="₹" value={f.cost_price} onChange={(e) => set("cost_price", e.target.value)} />
