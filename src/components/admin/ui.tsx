@@ -469,14 +469,14 @@ export function useConfirm() {
     body?: ReactNode;
     confirm: string;
     danger?: boolean;
-    reason?: { label: string; required?: boolean };
+    reason?: { label: string; required?: boolean; value?: string; single?: boolean };
     resolve: (v: { ok: boolean; reason: string }) => void;
   } | null>(null);
   const [reason, setReason] = useState("");
   const ask = useCallback(
-    (o: { title: string; body?: ReactNode; confirm?: string; danger?: boolean; reason?: { label: string; required?: boolean } }) =>
+    (o: { title: string; body?: ReactNode; confirm?: string; danger?: boolean; reason?: { label: string; required?: boolean; value?: string; single?: boolean } }) =>
       new Promise<{ ok: boolean; reason: string }>((resolve) => {
-        setReason("");
+        setReason(o.reason?.value ?? "");
         setState({ confirm: "Confirm", ...o, resolve });
       }),
     [],
@@ -505,7 +505,11 @@ export function useConfirm() {
       {state?.body && <div className="text-[14px] text-fg">{state.body}</div>}
       {state?.reason && (
         <Field label={state.reason.label} className="mt-3">
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} rows={2} />
+          {state.reason.single ? (
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={80} onKeyDown={(e) => e.key === "Enter" && reason.trim() && close(true)} />
+          ) : (
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} rows={2} />
+          )}
         </Field>
       )}
     </Dialog>

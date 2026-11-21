@@ -29,6 +29,8 @@
     --accent-fg: 35 50 76;
     --accent-soft: 241 230 210;
     --accent-text: 126 94 40;   /* gold readable on ivory (5.1:1) */
+    --chart-1: 47 106 168;      /* French Blue, chart-validated */
+    --chart-2: 168 120 44;      /* Gold, chart-validated */
     --danger: 166 54 34;
     --danger-soft: 248 226 220;
     --success: 47 122 75;
@@ -83,6 +85,8 @@
     --accent-fg: 17 25 40;
     --accent-soft: 64 54 38;
     --accent-text: 221 193 151;
+    --chart-1: 91 147 211;
+    --chart-2: 184 138 46;
     --danger: 232 128 104;
     --danger-soft: 68 34 30;
     --success: 110 192 140;
