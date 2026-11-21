@@ -1,5 +1,5 @@
 import "server-only";
-import { migrations } from "./migrations";
+import { lockdownSql, migrations } from "./migrations";
 import { seed } from "./seed";
 
 /**
@@ -31,8 +31,24 @@ async function createPg(url: string): Promise<Db> {
   // numeric / int8 come back as strings by default — money and counts are numbers here
   types.setTypeParser(1700, numeric);
   types.setTypeParser(20, numeric);
-  const ssl = /sslmode=require|supabase\.co|pooler\.supabase\.com/.test(url) ? { rejectUnauthorized: false } : undefined;
-  const pool = new Pool({ connectionString: url, max: Number(process.env.DATABASE_POOL_MAX ?? 10), ssl });
+  // Supabase (and most hosted Postgres) require TLS. With DATABASE_CA_CERT (Supabase dashboard →
+  // Database → SSL certificate) the server certificate is verified; otherwise the connection is
+  // encrypted without certificate pinning.
+  const wantsSsl = /sslmode=(require|verify)|supabase\.(co|com)/.test(url);
+  const ca = process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n");
+  const ssl = wantsSsl ? (ca ? { ca, rejectUnauthorized: true } : { rejectUnauthorized: false }) : undefined;
+  // sslmode in the URL would override the settings above (pg parses it last), so drop it
+  let connectionString = url;
+  if (wantsSsl) {
+    try {
+      const u = new URL(url);
+      u.searchParams.delete("sslmode");
+      connectionString = u.toString();
+    } catch {
+      /* keep the URL as given */
+    }
+  }
+  const pool = new Pool({ connectionString, max: Number(process.env.DATABASE_POOL_MAX ?? 10), ssl });
   return {
     kind: "postgres",
     async query(sql, params = []) {
@@ -108,6 +124,8 @@ async function migrate(db: Db) {
       await q.query("insert into schema_migrations (version) values ($1)", [m.version]);
     }
     await seed(q);
+    // Supabase: no table is reachable through the public REST API (see 003_supabase)
+    await q.query(lockdownSql);
   });
 }
 
@@ -118,7 +136,7 @@ export function getDb(): Promise<Db> {
     g.__neelDb = (async () => {
       const url = process.env.DATABASE_URL;
       if (!url && process.env.NODE_ENV === "production" && !process.env.ALLOW_EMBEDDED_DB) {
-        throw new Error("DATABASE_URL is not configured. Set it to your Postgres (e.g. Supabase) connection string.");
+        throw new Error("DATABASE_URL is not configured. Set it to your Supabase database connection string (see README → Supabase setup).");
       }
       const db = url ? await createPg(url) : await createPglite();
       await migrate(db);

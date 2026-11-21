@@ -1,6 +1,8 @@
 import { api, bad } from "@/server/http";
 import { q } from "@/server/db";
 import { rateLimit } from "@/server/ratelimit";
+import { StorageError, supabaseStorageEnabled, uploadToStorage } from "@/server/storage";
+import { ApiError } from "@/server/http";
 
 const TYPES = new Set(["image/webp", "image/jpeg", "image/png"]);
 const MAX = 1_500_000;
@@ -14,8 +16,8 @@ function sniff(buf: Buffer) {
 }
 
 /**
- * Food photo upload. The browser resizes to ≤1200px WebP before sending; images
- * are stored in Postgres and served with long-lived caching.
+ * Food photo upload. The browser resizes to ≤1200px WebP before sending. With Supabase
+ * configured the file goes to Supabase Storage; otherwise it is kept in the database.
  */
 export const POST = api(
   async (ctx) => {
@@ -29,9 +31,19 @@ export const POST = api(
     if (!type || !TYPES.has(type)) throw bad("Upload a JPG, PNG or WebP image.");
     const width = Number(form?.get("width")) || null;
     const height = Number(form?.get("height")) || null;
-    const { rows } = await q<{ id: string }>("insert into images (content_type, data, bytes, width, height, created_by) values ($1,$2,$3,$4,$5,$6) returning id", [
+    let storagePath: string | null = null;
+    if (supabaseStorageEnabled()) {
+      try {
+        storagePath = await uploadToStorage(buf, type);
+      } catch (e) {
+        if (e instanceof StorageError) throw new ApiError(502, "The photo couldn't be saved to storage. Please try again.", "STORAGE");
+        throw e;
+      }
+    }
+    const { rows } = await q<{ id: string }>("insert into images (content_type, data, storage_path, bytes, width, height, created_by) values ($1,$2,$3,$4,$5,$6,$7) returning id", [
       type,
-      buf,
+      storagePath ? null : buf,
+      storagePath,
       buf.length,
       width,
       height,

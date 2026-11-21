@@ -16,7 +16,7 @@ export const GET = api(
       ...menu,
       items: menu.items.map((i) => ({
         ...i,
-        image: imageUrl(i.image_id),
+        image: imageUrl(i.image_id, i.image_path),
         recipe: recipes.rows.filter((r) => r.menu_item_id === i.id).map(({ inventory_item_id, qty }) => ({ inventory_item_id, qty })),
       })),
       groups: menu.groups.map((g) => ({

@@ -5,7 +5,7 @@
 * **Customers** order from their phone. They scan the table QR code or choose takeaway, build bowls and shakes, track the order live, and join rewards with their mobile number.
 * **Staff** use the console at `/admin`, which covers orders, the counter (POS), kitchen, tables & QR codes, menu, inventory, purchases, finance & P&L, reports, customers, loyalty, campaigns, staff & permissions, the audit log and settings.
 
-Next.js 15 (App Router; route handlers are the backend) · TypeScript · PostgreSQL · Tailwind · Zod.
+Next.js 15 (App Router; route handlers are the backend) · **Supabase** (Postgres database + Storage) · TypeScript · Tailwind · Zod.
 
 ---
 
@@ -19,10 +19,38 @@ npm run dev                    # http://localhost:3000
 
 **Database setup:**
 
-* **No `DATABASE_URL`:** development uses an embedded Postgres (PGlite) in `.data/pglite`. Delete that folder to start fresh.
-* **With a `DATABASE_URL`:** the app uses that Postgres.
+* **Production / shared environments: Supabase.** Follow [Supabase setup](#supabase-setup) below.
+* **Local development without Supabase:** with no `DATABASE_URL`, an embedded Postgres (PGlite) in `.data/pglite` is used. Delete that folder to start fresh.
 
 Either way, migrations and the seed (menu, tables 01–16, roles, message templates, first admin) run automatically on first start.
+
+## Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com) (choose the Mumbai region for India). Note the database password.
+2. **Connect → Connection string.** Copy the **Session pooler** URI into `DATABASE_URL`. On serverless hosting such as Vercel, use the **Transaction pooler** URI (port 6543) instead.
+3. **Project Settings → API.** Copy the **Project URL** into `SUPABASE_URL` and the **service_role** key into `SUPABASE_SERVICE_ROLE_KEY`. The key is used only by the server. Never prefix it with `NEXT_PUBLIC_`.
+4. Optional: **Database → Settings → SSL certificate.** Paste it into `DATABASE_CA_CERT` so the database certificate is verified.
+5. Start the app. On first start it does the following by itself:
+   * creates every table and loads the menu;
+   * creates the first admin;
+   * creates the public `menu-images` Storage bucket on the first photo upload.
+
+**How Supabase is used**
+
+* **Database:** all data lives in your Supabase Postgres.
+* **Storage:** menu photos live in Supabase Storage and are served from its CDN.
+* **Server-side only:** the app's server is the only thing that talks to the database.
+
+**Security**
+
+Supabase exposes the `public` schema through its auto-generated REST API to anyone holding the project's anon key. To close that off, the app does two things on every start:
+
+* enables **row-level security on every table** (with no policies);
+* revokes all access from the `anon` and `authenticated` roles.
+
+The result: customer data, staff password hashes and order history can't be read through the Supabase API, only through the app's permission-checked routes. `tests/server/supabase.test.ts` verifies this against a Postgres with Supabase's roles.
+
+**Sign-in stays in the app, not Supabase Auth.** The app handles staff accounts, role permissions, the forced first-time password change and customer SMS codes itself, so they're enforced in one place. Supabase Auth's phone sign-in would also need the same Twilio account.
 
 **First sign-in:**
 
@@ -43,7 +71,10 @@ Every variable is documented in [`.env.example`](.env.example).
 
 | Variable | Needed for |
 |---|---|
-| `DATABASE_URL` | **Required in production.** Postgres connection string. |
+| `DATABASE_URL` | **Required in production.** Supabase Postgres connection string (pooler). |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase Storage for menu photos (server-side key). |
+| `SUPABASE_STORAGE_BUCKET` | Bucket name (default `menu-images`, created automatically). |
+| `DATABASE_CA_CERT` | Optional Supabase SSL certificate, so the database certificate is verified. |
 | `NEXT_PUBLIC_SITE_URL` | Public site address. QR codes and unsubscribe links use it, so set it before printing QR codes. |
 | `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_PASSWORD` | First Super Admin, created once. A password change is forced on first sign-in. |
 | `CRON_SECRET` | Enables `/api/cron`, which runs due campaigns, birthday messages, points expiry and the send queue. |
@@ -176,21 +207,13 @@ The palette is Champagne `#DBC7AC`, Ivory `#F4EEE2`, French Blue `#7A94AC`, Gold
 * Interactive blue is a deeper French Blue, for text contrast.
 * Chart colours are checked for colour-blind separation in both themes.
 
-The bowl and shake builders draw the dish from the ingredients actually chosen, using layered cut-out sprites and CSS. They don't use WebGL at runtime.
+Items show their uploaded photo, or a neutral tile with the category's icon. There are no illustrations, 3D scenes or decorative animations.
 
-### Re-rendering imagery
-
-To regenerate the bowl and ingredient sprites:
-
-1. Run `npm run dev`.
-2. Run `scripts/sprites/render.js`. It uses headless Chromium against the dev-only `/dev/sprites` page, which renders the three.js scenes in `src/three/`.
-3. Run `python3 scripts/sprites/process_sprites.py <renders> .`
-
-Real product photos can also be uploaded per item in **Menu** and replace the illustration.
+Upload real product photos per item in **Menu** (they are stored in Supabase Storage).
 
 ## Before going live — checklist
 
-- [ ] `DATABASE_URL` points at a managed Postgres with backups.
+- [ ] A Supabase project is set up: `DATABASE_URL`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase setup above). Enable daily backups / point-in-time recovery on the plan you choose.
 - [ ] `NEXT_PUBLIC_SITE_URL` is set, **then** print the table QR codes.
 - [ ] Sign in as admin, change the password, and create staff accounts.
 - [ ] Business details, GSTIN, GST rate and service charge are filled in under **Settings**.

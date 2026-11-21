@@ -1,5 +1,6 @@
 import "server-only";
 import { q, type Queryable } from "./db";
+import { publicUrl, supabaseStorageEnabled } from "./storage";
 
 export interface MenuModifier {
   id: string;
@@ -40,6 +41,8 @@ export interface MenuItemRow {
   diet: "veg" | "egg" | "nonveg";
   tags: string[];
   image_id: string | null;
+  /** set when the photo lives in Supabase Storage */
+  image_path: string | null;
   art_kind: string;
   tint: string[];
   visual: "art" | "bowl" | "glass";
@@ -61,7 +64,8 @@ export interface MenuCategoryRow {
   is_active: boolean;
 }
 
-export const imageUrl = (id: string | null) => (id ? `/api/images/${id}` : null);
+/** Photo address: Supabase Storage CDN when stored there, otherwise served by the app. */
+export const imageUrl = (id: string | null, path: string | null = null) => (path && supabaseStorageEnabled() ? publicUrl(path) : id ? `/api/images/${id}` : null);
 
 /** Full menu with everything joined. `scope: "public"` hides inactive/hidden data. */
 export async function loadMenu(scope: "public" | "admin", db: Queryable | null = null) {
@@ -70,7 +74,8 @@ export async function loadMenu(scope: "public" | "admin", db: Queryable | null =
   const [cats, items, variants, groups, mods, links, defaults] = await Promise.all([
     run<MenuCategoryRow>(`select id, name, slug, description, art_kind, sort, is_active from menu_categories ${pub ? "where is_active" : ""} order by sort, name`),
     run<Omit<MenuItemRow, "variants" | "group_ids" | "default_modifier_ids">>(
-      `select id, category_id, name, slug, description, price, cost_price, diet, tags, image_id, art_kind, tint, visual, status, is_active, is_featured, sort
+      `select id, category_id, name, slug, description, price, cost_price, diet, tags, image_id,
+              (select storage_path from images im where im.id = menu_items.image_id) as image_path, art_kind, tint, visual, status, is_active, is_featured, sort
          from menu_items ${pub ? "where is_active and status <> 'hidden'" : "where is_active"} order by sort, name`,
     ),
     run<MenuVariant & { item_id: string }>(`select id, item_id, name, price, cost_price, is_default, is_active, sort from item_variants ${pub ? "where is_active" : ""} order by sort, name`),
@@ -126,7 +131,7 @@ export function publicMenuPayload(m: LoadedMenu) {
       price: i.price,
       diet: i.diet,
       tags: i.tags,
-      image: imageUrl(i.image_id),
+      image: imageUrl(i.image_id, i.image_path),
       art_kind: i.art_kind,
       tint: i.tint,
       visual: i.visual,
